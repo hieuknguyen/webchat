@@ -19,5 +19,7 @@ from users import views as user
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', user.get_home, name='user'),
-    path('accounts/',include('accounts.urls'))
+    path('login/',user.login),
+    path('register/',user.register),
+    path('changepassword/',user.changepassword)
 ]
