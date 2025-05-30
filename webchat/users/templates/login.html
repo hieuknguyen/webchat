@@ -8,4 +8,48 @@
   <button onclick="login()">Đăng nhập</button>
   <h5><a href="/register/">bạn chưa có tài khoản?</a></h5>
 </div>
+<script>
+  async function login() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    try {
+      const response = await fetch("/api/login/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCookie("csrftoken"),
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert("Đăng nhập thành công!");
+        window.location.href = "/"; // ← chuyển về trang chủ
+      } else {
+        alert("Lỗi: " + (data.message || "Email hoặc mật khẩu sai."));
+      }
+    } catch (error) {
+      alert("Lỗi kết nối: " + error.message);
+    }
+  }
+
+  // Lấy CSRF token từ cookie
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+      const cookies = document.cookie.split(";");
+      for (let cookie of cookies) {
+        cookie = cookie.trim();
+        if (cookie.startsWith(name + "=")) {
+          cookieValue = decodeURIComponent(cookie.slice(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+</script>
 {% endblock %}
