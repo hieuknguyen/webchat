@@ -10,4 +10,60 @@
   <button onclick="register()">Đăng ký</button>
   <h5><a href="/login/">đăng nhập ngay</a></h5>
 </div>
+<script>
+  async function register() {
+    const username = document.getElementById("username").value;
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    const confirm = document.getElementById("confirm").value;
+
+    if (password !== confirm) {
+      alert("Mật khẩu không khớp!");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/register/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCookie("csrftoken") // Để tránh lỗi CSRF
+        },
+        body: JSON.stringify({
+          username,
+          email,
+          password
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert("Đăng ký thành công!");
+        window.location.href = "/accounts/login/";
+      } else {
+        alert("Lỗi: " + data.detail || data.error || "Không rõ nguyên nhân");
+      }
+    } catch (error) {
+      alert("Lỗi kết nối: " + error.message);
+    }
+  }
+
+  // Lấy CSRF token từ cookie
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+      const cookies = document.cookie.split(";");
+      for (let cookie of cookies) {
+        cookie = cookie.trim();
+        if (cookie.startsWith(name + "=")) {
+          cookieValue = decodeURIComponent(cookie.slice(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+</script>
+
 {% endblock %}
