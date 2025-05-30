@@ -21,7 +21,6 @@
       alert("Mật khẩu không khớp!");
       return;
     }
-
     try {
       const response = await fetch("/api/register/", {
         method: "POST",
@@ -40,7 +39,7 @@
 
       if (response.ok) {
         alert("Đăng ký thành công!");
-        window.location.href = "/accounts/login/";
+        window.location.href = "/login/";
       } else {
         alert("Lỗi: " + data.detail || data.error || "Không rõ nguyên nhân");
       }

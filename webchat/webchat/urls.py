@@ -21,5 +21,6 @@ urlpatterns = [
     path('', user.get_home, name='user'),
     path('login/',user.login),
     path('register/',user.register),
+    path('api/register/', user.register_api),
     path('changepassword/',user.changepassword)
 ]
