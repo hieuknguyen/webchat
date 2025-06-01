@@ -3,12 +3,18 @@
 {%block content%}
 <div class="form-container">
   <h2>Đăng ký</h2>
+  <div class="switch" >
+    <span onclick="tologin()">Đăng nhập</span>
+    <span style=" background-color:white; ">Đăng ký</span>
+  </div>
+
+
   <input type="text" id="username" placeholder="Username">
   <input type="email" id="email" placeholder="Email">
   <input type="password" id="password" placeholder="Mật khẩu">
   <input type="password" id="confirm" placeholder="Nhập lại mật khẩu">
   <button class ="btn1" onclick="register()" >Đăng ký</button>
-  <h5><a href="/login/">đăng nhập ngay</a></h5>
+  {% comment %} <h5><a href="/login/">đăng nhập ngay</a></h5> {% endcomment %}
   <div class ="social-text"><p>Hoặc tiếp tục với</p></div>
   <div class="social-login">
     
@@ -28,6 +34,10 @@
 
 
 <script>
+  function tologin() {
+  window.location.href = "/login/";  // chuyển trang hiện tại sang URL này
+  }
+
   async function register() {
     const username = document.getElementById("username").value;
     const email = document.getElementById("email").value;

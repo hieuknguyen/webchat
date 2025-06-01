@@ -3,10 +3,24 @@
 {%block content%}
 <div class="form-container">
   <h2>Đăng nhập</h2>
+  <div class="switch" >
+    <span style=" background-color:white; ">Đăng nhập</span>
+    <span onclick="toregister()">Đăng ký</span>
+  </div>
   <input type="text" id="email" placeholder="Email">
   <input type="password" id="password" placeholder="Mật khẩu">
+  <div style="text-align: center;">
+    <label style="display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;text-align: left;">
+      <input type="checkbox" />
+      Ghi nhớ đăng nhập
+    </label>
+  </div>
+
+
+
+
   <button class ="btn1" onclick="login()">Đăng nhập</button>
-  <h5><a href="/register/">bạn chưa có tài khoản?</a></h5>
+  {% comment %} <h5><a href="/register/">bạn chưa có tài khoản?</a></h5> {% endcomment %}
   <div class ="social-text"><p>Hoặc tiếp tục với</p></div>
   <div class="social-login">
     <div style="display: flex; justify-content: center;">
@@ -24,6 +38,9 @@
 
 
 <script>
+  function toregister() {
+  window.location.href = "/register/";  // chuyển trang hiện tại sang URL này
+  }
   async function login() {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;

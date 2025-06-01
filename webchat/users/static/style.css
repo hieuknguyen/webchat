@@ -109,3 +109,29 @@ input, button {
   margin-left: 10px;
 }
 
+
+
+
+.switch {
+  background-color: gray;
+  color: black;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  padding: 0 0 0 0;
+  flex: 1;     
+  display: flex;     
+  font-size: 25px;
+  /* justify-content: center; */
+  text-align: center;     
+  align-items: center;
+  height: 40px;
+  box-sizing: border-box;
+}
+.switch span {
+  flex: 1;         
+  margin: 2px;      
+  height: 85%;
+  box-sizing: border-box; 
+  border-radius: 20px;
+}
