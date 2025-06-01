@@ -23,7 +23,9 @@ input, button {
 .btn1 {
   width: 95%;
   border-radius: 10px;
-  background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+  background: linear-gradient(135deg, #ff9a9e, #2600ff);
+  font-weight: bold;
+  color: #fff;
   cursor: pointer;
   margin: 0 auto 15px;
   padding: 10px;
