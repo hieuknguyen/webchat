@@ -1,6 +1,6 @@
 body {
   font-family: Arial;
-  background: rgb(11, 214, 221);
+  background: linear-gradient(135deg, #a8edea, #fed6e3);
   padding: 50px;
   /* box-sizing: border-box; */
   
@@ -10,7 +10,7 @@ body {
   padding: 20px;
   width: 400px;
   margin: auto;
-  border-radius: 5px;
+  border-radius: 10px;
   text-align: center;
   display: block
 }
@@ -23,29 +23,16 @@ input, button {
 .btn1 {
   width: 95%;
   border-radius: 10px;
-  text-align: center;
-  display: block;
+  background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+  cursor: pointer;
   margin: 0 auto 15px;
   padding: 10px;
 }
-/* input {
-  display: block;
-  width: 95%;
-  margin-bottom: 15px;
-  padding: 10px;
+.btn1:hover {
+  background-color: rgb(131, 131, 134);
+  transform: scale(1.02);
 }
-button {
-  padding: 10px 20px;
-  width: 80%;
-  display: block;
-} */
 
-
-.social-login p {
-  margin-bottom: 10px;
-  color: #333;
-  font-weight: bold;
-}
 
 .social-btn {
 
@@ -82,3 +69,41 @@ button {
   background-color: #145dbf;
   transform: scale(1.02);
 }
+
+
+
+
+
+.social-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.social-text p {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  color: #333;
+  font-weight: bold;
+  font-size: 14px;
+  margin: 10px 0;
+}
+
+.social-text p::before,
+.social-text p::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background-color: #ccc;
+}
+
+.social-text p::before {
+  margin-right: 10px;
+}
+
+.social-text p::after {
+  margin-left: 10px;
+}
+
