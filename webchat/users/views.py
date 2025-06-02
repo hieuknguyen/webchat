@@ -1,7 +1,4 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth.models import User
-from django.contrib.auth import authenticate, login as auth_login
-from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
 import requests
@@ -9,11 +6,14 @@ def get_home(request):
     user = request.COOKIES.get('user')
     if user:
         try:
-            user_data = json.loads(user)
-            return render(request, 'index.html', {'user': user_data})
+            response = render(request, 'index.html', {'user': user})
+            return response
         except json.JSONDecodeError:
-            return render(request, 'index.html', {'error': 'Invalid user data in cookie.'})
-    return render(request, 'index.html')
+            response = redirect('/home/')
+            return response
+    else:
+        response = redirect('/login/')
+        return response
 
 
 
@@ -48,7 +48,7 @@ def register_form(request):
         except requests.exceptions.RequestException as e:
             return render(request, 'register.html', {'error': 'Unable to connect to registration service.'})
 
-    return render(request, 'register.html', {'user': json.loads(user) if user else None})
+    return render(request, 'register.html', {'user': user if user else None})
 
 
 def login_form(request):
@@ -62,18 +62,22 @@ def login_form(request):
             if response.status_code == 200:
                 data = response.json()
                 if data.get("isSuccess"):
-                    response = render(request, 'index.html', {'message': 'Login successful', 'user': data.get("data")})
+                    response = redirect('/')
                     response.set_cookie('user', data.get("data"))
                     return response
                 else:
                     return render(request, 'login.html', {'error': data.get("reason", "Login failed")})
             else:
                 return render(request, 'login.html', {'error': 'API login failed'})
-
         except requests.exceptions.RequestException as e:
             return render(request, 'login.html', {'error': 'Unable to connect to login service.'})
+    if request.COOKIES.get('user'):
+        return redirect('/')
     return render(request, 'login.html')
-
+def logout(request):
+    response = redirect('/')
+    response.delete_cookie('user')
+    return response
 
 # test
 # url = "https://quackquack.io.vn/api/users/login.php"

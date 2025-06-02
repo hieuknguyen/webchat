@@ -1,21 +1,632 @@
-<form method="POST">
-  {% csrf_token %}
-  <label>Username:</label>
-  <input type="text" name="username" required>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhotoChat - Đăng Nhập</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-  <label>Email:</label>
-  <input type="email" name="email" required>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #fce7f3 0%, #f3e8ff 50%, #dbeafe 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
 
-  <label>Password:</label>
-  <input type="password" name="password" required>
+        /* Background decorations */
+        .bg-decoration {
+            position: absolute;
+            border-radius: 50%;
+            mix-blend-mode: multiply;
+            filter: blur(60px);
+            animation: pulse 4s ease-in-out infinite;
+        }
 
-  <button type="submit">Register</button>
+        .bg-decoration:nth-child(1) {
+            top: -200px;
+            right: -200px;
+            width: 400px;
+            height: 400px;
+            background: #fda4af;
+            opacity: 0.6;
+        }
 
-  {% if message %}
-    <p style="color:green">{{ message }}</p>
-  {% endif %}
-  {% if error %}
-    <p style="color:red">{{ error }}</p>
-  {% endif %}
-  <p>Cookie "mycookie": {{ user }}</p>
-</form>
+        .bg-decoration:nth-child(2) {
+            bottom: -200px;
+            left: -200px;
+            width: 400px;
+            height: 400px;
+            background: #93c5fd;
+            opacity: 0.6;
+            animation-delay: -2s;
+        }
+
+        .bg-decoration:nth-child(3) {
+            top: 200px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 300px;
+            background: #c084fc;
+            opacity: 0.6;
+            animation-delay: -1s;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 1200px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                gap: 40px;
+                text-align: center;
+            }
+        }
+
+        /* Left side - Branding */
+        .branding {
+            color: #374151;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+
+        @media (max-width: 768px) {
+            .logo {
+                justify-content: center;
+            }
+        }
+
+        .logo-icon {
+            position: relative;
+            width: 48px;
+            height: 48px;
+        }
+
+        .camera-icon {
+            width: 48px;
+            height: 48px;
+            color: #f472b6;
+        }
+
+        .notification-dot {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            width: 16px;
+            height: 16px;
+            background: #60a5fa;
+            border-radius: 50%;
+            animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
+
+        @keyframes ping {
+            75%, 100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+
+        .brand-name {
+            font-size: 36px;
+            font-weight: bold;
+            background: linear-gradient(45deg, #ec4899, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .main-title {
+            font-size: 48px;
+            font-weight: bold;
+            line-height: 1.2;
+            margin-bottom: 16px;
+        }
+
+        .highlight-text {
+            background: linear-gradient(45deg, #ec4899, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 20px;
+            color: #6b7280;
+            margin-bottom: 32px;
+            max-width: 400px;
+        }
+
+        .features {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+        }
+
+        @media (max-width: 768px) {
+            .features {
+                justify-content: center;
+            }
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .feature-icon {
+            width: 24px;
+            height: 24px;
+        }
+
+        .feature-text {
+            color: #6b7280;
+        }
+
+        /* Right side - Form */
+        .form-container {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 32px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+
+        .form-toggle {
+            display: flex;
+            background: #f3f4f6;
+            border-radius: 16px;
+            padding: 4px;
+            margin-bottom: 32px;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: transparent;
+        }
+
+        .toggle-btn.active {
+            background: white;
+            color: #374151;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .toggle-btn:not(.active) {
+            color: #6b7280;
+        }
+
+        .toggle-btn:not(.active):hover {
+            color: #374151;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .input-container {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            color: #6b7280;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 16px 16px 16px 44px;
+            background: #f9fafb;
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            font-size: 16px;
+            color: #374151;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #f472b6;
+            box-shadow: 0 0 0 3px rgba(244, 114, 182, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: #9ca3af;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .password-toggle-icon {
+            width: 20px;
+            height: 20px;
+            color: #6b7280;
+            transition: color 0.3s ease;
+        }
+
+        .password-toggle:hover .password-toggle-icon {
+            color: #374151;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+        }
+
+        .checkbox {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            accent-color: #ec4899;
+        }
+
+        .checkbox-label {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .forgot-password {
+            font-size: 14px;
+            color: #ec4899;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .forgot-password:hover {
+            color: #db2777;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(45deg, #ec4899, #8b5cf6);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
+        }
+
+        .divider {
+            margin: 32px 0;
+            position: relative;
+            text-align: center;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #d1d5db;
+        }
+
+        .divider-text {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 0 16px;
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .social-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .social-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            color: #374151;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .social-btn:hover {
+            background: #f9fafb;
+        }
+
+        .social-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Background decorations -->
+    <div class="bg-decoration"></div>
+    <div class="bg-decoration"></div>
+    <div class="bg-decoration"></div>
+
+    <div class="container">
+        <!-- Left side - Branding -->
+        <div class="branding">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg class="camera-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    <div class="notification-dot"></div>
+                </div>
+                <h1 class="brand-name">PhotoChat</h1>
+            </div>
+
+            <div>
+                <h2 class="main-title">
+                    Chia sẻ khoảnh khắc<br>
+                    <span class="highlight-text">qua hình ảnh</span>
+                </h2>
+                <p class="subtitle">
+                    Kết nối với bạn bè thông qua những bức ảnh đầy cảm xúc
+                </p>
+            </div>
+
+            <div class="features">
+                <div class="feature-item">
+                    <svg class="feature-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #f472b6;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    <span class="feature-text">Chia sẻ ảnh</span>
+                </div>
+                <div class="feature-item">
+                    <svg class="feature-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #60a5fa;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                    </svg>
+                    <span class="feature-text">Chat nhóm</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right side - Form -->
+        <div class="form-container">
+            <!-- Toggle buttons -->
+            <div class="form-toggle">
+                <button class="toggle-btn active" onclick="switchForm('login')">Đăng nhập</button>
+                <button class="toggle-btn" onclick="switchForm('register')">Đăng ký</button>
+            </div>
+
+            <!-- Login Form -->
+            <div id="loginForm">
+                <div class="form-group" id="usernameGroup" style="display: none;">
+                    <div class="input-container">
+                        <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                        </svg>
+                        <input type="text" class="form-input" placeholder="Tên người dùng" id="username" >
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="input-container">
+                        <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path>
+                        </svg>
+                        <input type="email" class="form-input" placeholder="Email" id="email" value="nguyen">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="input-container">
+                        <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                        </svg>
+                        <input type="password" class="form-input" placeholder="Mật khẩu" id="password">
+                        <button type="button" class="password-toggle" onclick="togglePassword('password')">
+                            <svg class="password-toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group" id="confirmPasswordGroup" style="display: none;">
+                    <div class="input-container">
+                        <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                        </svg>
+                        <input type="password" class="form-input" placeholder="Xác nhận mật khẩu" id="confirmPassword">
+                    </div>
+                </div>
+
+                <div class="checkbox-container" id="rememberContainer">
+                    <div class="checkbox-group">
+                        <input type="checkbox" class="checkbox" id="remember">
+                        <label class="checkbox-label" for="remember">Ghi nhớ đăng nhập</label>
+                    </div>
+                    <a href="#" class="forgot-password">Quên mật khẩu?</a>
+                </div>
+
+                <button class="submit-btn" onclick="handleSubmit()">
+                    <span id="submitText">Đăng nhập</span>
+                </button>
+            </div>
+
+            <!-- Social login -->
+            <div class="divider">
+                <span class="divider-text">Hoặc tiếp tục với</span>
+            </div>
+
+            <div class="social-buttons">
+                <a href="#" class="social-btn">
+                    <svg class="social-icon" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Google
+                </a>
+
+                <a href="#" class="social-btn">
+                    <svg class="social-icon" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                    Facebook
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {% comment %} <script>
+        let isLoginMode = true;
+
+        function switchForm(mode) {
+            isLoginMode = mode === 'login';
+            
+            // Update toggle buttons
+            const toggleBtns = document.querySelectorAll('.toggle-btn');
+            toggleBtns.forEach(btn => btn.classList.remove('active'));
+            
+            if (isLoginMode) {
+                toggleBtns[0].classList.add('active');
+            } else {
+                toggleBtns[1].classList.add('active');
+            }
+
+            // Show/hide form fields
+            const usernameGroup = document.getElementById('usernameGroup');
+            const confirmPasswordGroup = document.getElementById('confirmPasswordGroup');
+            const rememberContainer = document.getElementById('rememberContainer');
+            const submitText = document.getElementById('submitText');
+
+            if (isLoginMode) {
+                usernameGroup.style.display = 'none';
+                confirmPasswordGroup.style.display = 'none';
+                rememberContainer.style.display = 'flex';
+                submitText.textContent = 'Đăng nhập';
+            } else {
+                usernameGroup.style.display = 'block';
+                confirmPasswordGroup.style.display = 'block';
+                rememberContainer.style.display = 'none';
+                submitText.textContent = 'Tạo tài khoản';
+            }
+        }
+
+        function togglePassword(inputId) {
+            const passwordInput = document.getElementById(inputId);
+            const toggleIcon = passwordInput.parentElement.querySelector('.password-toggle-icon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.innerHTML = `
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L12 12m-3.122-3.122L3 3m6.878 6.878L12 12m0 0l3.878 3.878M12 12l-3.122-3.122"></path>
+                `;
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.innerHTML = `
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                `;
+            }
+        }
+
+        function handleSubmit() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (isLoginMode) {
+                console.log('Đăng nhập:', { email, password });
+                alert('Đăng nhập thành công!');
+            } else {
+                const username = document.getElementById('username').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+                
+                if (password !== confirmPassword) {
+                    alert('Mật khẩu xác nhận không khớp!');
+                    return;
+                }
+                
+                console.log('Đăng ký:', { username, email, password });
+                alert('Đăng ký thành công!');
+            }
+        }
+
+        // Add enter key support
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                handleSubmit();
+            }
+        });
+    </script> {% endcomment %}
+</body>
+</html>
