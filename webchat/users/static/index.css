@@ -1,0 +1,331 @@
+* {
+    
+    margin: 0px;
+    padding: 0px;
+    box-sizing: border-box;
+    font-family: 'Poppins', 'sans-serif';
+}
+
+body {
+    background: url('https://raw.githubusercontent.com/hieuknguyen/project/main/backgound1.jpg') no-repeat;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-size: cover;
+    background-position: center;
+}
+
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 20px 100px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 99;
+    backdrop-filter: blur(2px);
+    background-color:#0000ff52;
+}
+
+.logo {
+    font-size: 2em;
+    color: #fff;
+    user-select: non;
+}
+
+.navigation a, .navigation #bnt{
+    position: relative;
+    font-size: 1.1em;
+    color: #fff;
+}
+.navigation a{
+    text-decoration: none;
+    font-weight: 500;
+    margin-left: 40px;
+}
+.navigation #bnt{
+    border:none;
+    cursor: pointer;
+    background-color: rgba(0, 0, 0, 0);
+}
+.navigation #bnt::after, .navigation a::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -6px;
+    width: 100%;
+    height: 3px;
+    background: #fff;
+    border-radius: 5px;
+    transform-origin: right;
+    transform: scaleX(0);
+    transition: transform .5s;
+}
+
+
+.navigation a:hover::after, .navigation #bnt:hover::after {
+    transform-origin: left;
+    transform: scaleX(1);
+}
+
+.navigation .btnlogin {
+    width: 130px;
+    height: 50px;
+    background: transparent;
+    border: 2px solid #fff;
+    outline: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1.1em;
+    color: #fff;
+    margin-left: 40px;
+    transition: .5s;
+}
+
+.navigation .btnlogin:hover {
+    background: #fff;
+    color: black
+}
+
+.wrapper {
+    position: relative;
+
+    width: 600px;
+    height: 640px;
+    background: transparent;
+    border: 2px solid rgba(255, 255, 255, .5);
+    border-radius: 20px;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 0 40px rgba(0, 0, 0, .5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    /* transform: scale(1.5); */
+    /* transition: height .2s ease; */
+}
+
+.wrapper .form-box {
+    width: 100%;
+    /* height: 100%; */
+    padding: 40px;
+}
+
+.wrapper .icon-close{
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 45px;
+    height: 45px;
+    background: #162938;
+    font-size: 2em;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-bottom-left-radius: 20px;
+    cursor: pointer;
+    z-index: 1;
+}
+
+.form-box h2 {
+    font-size: 2em;
+    color: #162938;
+    text-align: center;
+}
+
+.input-box {
+    
+    position: relative;
+    width: 100%;
+    height: 55px;
+    border-bottom: 2px solid transparent;
+    margin-bottom: 70px;
+}
+.input-box::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  background: linear-gradient(45deg, #ec4899, #8b5cf6);
+  z-index: 0;
+}
+
+.input-box label {
+    position: absolute;
+    top: 50%;
+    left: 5px;
+    font-size: 1.4em;
+    color: #162938;
+    font-weight: 600;
+    pointer-events: none;
+    transition: .5s;
+    white-space: nowrap;
+}
+
+.input-box input:focus~label,
+.input-box input:valid~label {
+    top: -3px;
+}
+
+.input-box input{
+    
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    transition: background-color 5000s ease-in-out 1s;
+    border: none;
+    outline: none;
+    font-size: 1.4em;
+    color: #162938;
+    font-weight: 400;
+    padding: 20px 35px 0px 5px;
+}
+
+.input-box .icon {
+    position: absolute;
+    top:1px;
+    right: 8px;
+    font-size: 1.2em;
+    color: #162938;
+    line-height: 57px;
+}
+.input-box .icon .locks{
+    display: inline-block;
+}
+.input-box .icon .show{
+    display: none;
+}
+.remember-forgot {
+    font-size: 1.2em;
+    color: #162938;
+    font-weight: 500;
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.remember-forgot label input {
+    accent-color: #162938;
+    margin-right: 3px;
+}
+
+.remember-forgot a{
+    color: #162938;
+    text-decoration: none;
+}
+
+.remember-forgot a:hover {
+    text-decoration: underline;
+}
+.form-box #bnt{
+    width: 100%;
+    height: 45px;
+    /* background: #162938; */
+    background: linear-gradient(45deg, #ec4899, #8b5cf6);
+    border: none;
+    outline: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1.2em;
+    color: #162938;
+    font-weight: 500;
+}
+
+.login-register{
+    font-size: .9em;
+    color: #162938;
+    text-align: center;
+    font-weight: 500;
+    margin: 25px 0 10px;
+}
+
+.login-register p a{
+    color: #162938;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.login-register p a:hover{
+    text-decoration:  underline;
+}
+.form-box #bnt, .input-box #bnt{
+    background-color: rgba(0, 0, 0, 0); 
+    border:none;
+}
+.form-box #bnt:hover, .input-box #bnt:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transform: translateY(-2px);
+  }
+.chat{
+    
+    position: absolute;
+    background-color:rgb(0,0,0,0);
+    backdrop-filter: blur(20px);
+    width:400px;
+    height:400px;
+    display:none;
+    bottom:50%;
+    right:50%;
+    transform: translate(50%, 50%);
+}
+.a{
+    
+    height:350px;
+    overflow-y: auto;
+    overflow-x: hidden
+}
+.chat [name="me"], .chat [name="you"]{
+    font-size: 2em;
+    border-radius: 10px;
+    width: max-content;
+    max-width: 300px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    
+}
+.chat [name="me"]{
+    box-sizing: border-box;
+    background-color: rgba(22, 253, 145, 0.6);
+    word-wrap: break-word;
+}
+.chat [name="you"]{
+    box-sizing: border-box;
+    background-color: rgba(253, 214, 22, 0.6);
+    word-wrap: break-word;  
+}
+.send {
+    width: 400px;
+    height: 50px;
+    position: relative;
+    bottom: 10px;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.send #message {
+    background-color: rgba(0, 0, 0, 0.1);
+    border: none;
+    outline: none;
+    font-size: 2em;
+    color: #162938;
+    width: 330px;
+    height: 50px;
+    
+}
+.send #bnt{
+    position: absolute;
+    bottom: 0px;
+    width: 60px;
+    height: 50px;
+    background-image: url('https://raw.githubusercontent.com/hieuknguyen/project/refs/heads/main/quacquac1.png');
+    background-size: cover;
+    border: none;
+    cursor: pointer;
+    background-color: rgba(255, 255, 255, 0);
+}
