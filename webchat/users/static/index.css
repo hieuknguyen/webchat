@@ -1,3 +1,7 @@
+
+
+
+
 * {
     
     margin: 0px;
@@ -7,7 +11,7 @@
 }
 
 body {
-    background: url('https://raw.githubusercontent.com/hieuknguyen/project/main/backgound1.jpg') no-repeat;
+    
     display: flex;
     justify-content: center;
     align-items: center;
@@ -92,14 +96,16 @@ header {
 
 .wrapper {
     position: relative;
-
+    left:500px;
     width: 600px;
     height: 640px;
-    background: transparent;
+    /* background: transparent; */
+    background: #f8e7fa;
+   
     border: 2px solid rgba(255, 255, 255, .5);
     border-radius: 20px;
     backdrop-filter: blur(20px);
-    box-shadow: 0 0 40px rgba(0, 0, 0, .5);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
     display: none;
     justify-content: center;
     align-items: center;
@@ -114,22 +120,7 @@ header {
     padding: 40px;
 }
 
-.wrapper .icon-close{
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 45px;
-    height: 45px;
-    background: #162938;
-    font-size: 2em;
-    color: #fff;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-bottom-left-radius: 20px;
-    cursor: pointer;
-    z-index: 1;
-}
+
 
 .form-box h2 {
     font-size: 2em;
@@ -174,11 +165,11 @@ header {
 }
 
 .input-box input{
-    
     width: 100%;
     height: 100%;
     background: transparent;
-    transition: background-color 5000s ease-in-out 1s;
+    transition: background-color 99999999s ease-in-out 0s;
+    
     border: none;
     outline: none;
     font-size: 1.4em;
@@ -186,6 +177,7 @@ header {
     font-weight: 400;
     padding: 20px 35px 0px 5px;
 }
+
 
 .input-box .icon {
     position: absolute;
@@ -197,9 +189,17 @@ header {
 }
 .input-box .icon .locks{
     display: inline-block;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 .input-box .icon .show{
     display: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 .remember-forgot {
     font-size: 1.2em;
@@ -208,11 +208,16 @@ header {
     margin-bottom: 30px;
     display: flex;
     justify-content: space-between;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 .remember-forgot label input {
     accent-color: #162938;
     margin-right: 3px;
+   
 }
 
 .remember-forgot a{
@@ -226,7 +231,7 @@ header {
 .form-box #bnt{
     width: 100%;
     height: 45px;
-    /* background: #162938; */
+    
     background: linear-gradient(45deg, #ec4899, #8b5cf6);
     border: none;
     outline: none;
@@ -237,32 +242,32 @@ header {
     font-weight: 500;
 }
 
+.form-box #bnt:hover {
+    transform: translateY(-2px);
+}
+
+/* Register */
 .login-register{
-    font-size: .9em;
+    font-size: 1.2em;
     color: #162938;
     text-align: center;
     font-weight: 500;
     margin: 25px 0 10px;
+    
 }
-
 .login-register p a{
     color: #162938;
     text-decoration: none;
     font-weight: 600;
 }
-
 .login-register p a:hover{
     text-decoration:  underline;
-}
-.form-box #bnt, .input-box #bnt{
-    background-color: rgba(0, 0, 0, 0); 
-    border:none;
-}
-.form-box #bnt:hover, .input-box #bnt:hover {
-    background-color: rgba(0, 0, 0, 0.1);
+    
     cursor: pointer;
     transform: translateY(-2px);
-  }
+}
+
+
 .chat{
     
     position: absolute;

@@ -18,7 +18,7 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             min-height: 100vh;
-            background: linear-gradient(135deg,rgb(248, 213, 233) 0%, #f3e8ff 50%,rgb(200, 221, 248) 100%);
+            background: linear-gradient(135deg, #fce7f3 0%, #f3e8ff 50%, #dbeafe 100%);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -75,91 +75,43 @@
     </style>
 </head>
 <body>
-    <!-- Background decorations -->
     <div class="bg-decoration"></div>
     <div class="bg-decoration"></div>
-    <div class="bg-decoration"></div> 
-<div class="wrapper" style="display: flex;">
-            <span onclick="close_login()" class="icon-close">
-                <ion-icon onclick="close_login()" name="close"></ion-icon>
-            </span>
-            <div  class="form-box login">
-                <h2>Login</h2>
-                <form action="{% url 'login' %}" method="post">
-                    {% csrf_token %}
-                    <div class="input-box">
-                        <input id="input_email" name="email" required>
-                        <label for="input_email" >Email</label>
-                
-                        <span class="icon">
-                            <ion-icon name="person-outline"></ion-icon>
-                        </span>
-                    </div>
-                    <div class="input-box">
-                        <input id="input_password" type="password" name="password" required>
-                        <label >Password</label>
-                        <span class="icon">
-                            <ion-icon class="locks" id="locks" name="lock-closed-outline" onclick="hidden_show()"></ion-icon>
-                            <ion-icon class="show" id="show" name="lock-open-outline" onclick="hidden_show()"></ion-icon>
-                        </span>
-                    </div>
-                    <div class="remember-forgot">
-                        <label><input type="checkbox"> Remember me
-                        </label>
-                        <a href="#">Forgot Password</a>
-                    </div>
-                    <button id="bnt" type="submit" class="btn" onclick="check()">Đăng nhập
-                    </button>
-                    <div class="login-register">
-                        <p>Bạn không có tài khoản đăng nhập?
-                            <button id="bnt1" type="button" class="register-link" onclick="window.location.href='{% url 'register' %}'">Đăng kí</button>
-                        </p>
-                    </div>
-                </form>
-            </div>
-            <div class="form-box register" style="display:none">
-                <h2>register</h2>
-                <form action="register.php" method="post">
-                    <div class="input-box">
-                        <input id="input_username1" name="input_username" required>
-                        <label >Username</label>
-                        <p class="data-item" id="pass_username"></p><br>
-                        <span class="icon">
-                            <ion-icon name="person-outline"></ion-icon>
-                        </span>
-                    </div>
-                    <div class="input-box">
-                        <input id="input_password2" type="password" name="input_password" autocomplete="password" required><br>
-                        <label >password</label>
-                        
-                        <p class="data-item" id="check_pass"></p><br>
-
-                        <span class="icon">
-                            <ion-icon class="locks" id="locks" name="lock-closed-outline" onclick="hidden_show()"></ion-icon>
-                            <ion-icon class="show" id="show" name="lock-open-outline" onclick="hidden_show()"></ion-icon>
-                        </span>
-                    </div>
-                    <div class="input-box">
-                        <input id="input_password1" name="input_password1" type="password" autocomplete="new-password" required><br>
-                        <label id="Re_enter_the_password">Re-enter password</label>
-                        <p class="data-item" id="check_pass1"></p><br>
-                        <span class="icon">
-                            <ion-icon class="locks" id="locks" name="lock-closed-outline" onclick="hidden_show()"></ion-icon>
-                            <ion-icon class="show" id="show" name="lock-open-outline" onclick="hidden_show()"></ion-icon>
-                        </span>
-                    </div>
-                    <button id="bnt2" onclick="register1()">Đăng kí</button>
-                    <div class="login-register">
-                    <p>Bạn đã có tài khoản đăng nhập?
-                        <button id="bnt3" type="button" class="register-link" onclick="dangnhap()">Đăng nhập</button>
+    <div class="bg-decoration"></div>
+    <div class="wrapper" style="display: flex;">
+        <div class="form-box login">
+            <h2>Login</h2>
+            <form action="{% url 'login' %}" method="post">
+                {% csrf_token %}
+                <div class="input-box">
+                    <input id="input_email" name="email" type="email" required>
+                    <label for="input_email">Email</label>
+                    <span class="icon">
+                        <ion-icon name="person-outline"></ion-icon>
+                    </span>
+                </div>
+                <div class="input-box">
+                    <input id="input_password" type="password" name="password" required>
+                    <label>Password</label>
+                    <span class="icon">
+                        <ion-icon class="locks" id="locks" name="lock-closed-outline"
+                            onclick="hidden_show()"></ion-icon>
+                        <ion-icon class="show" id="show" name="lock-open-outline" onclick="hidden_show()"></ion-icon>
+                    </span>
+                </div>
+                <div class="remember-forgot">
+                    <label><input type="checkbox"> Remember me
+                    </label>
+                    <a href="#">Forgot Password</a>
+                </div>
+                <button id="bnt" type="submit" class="btn" onclick="check()">Đăng nhập</button>
+                <div class="login-register">
+                    <p>Bạn không có tài khoản đăng nhập?
+                        <a id="bnt2" class="register-link" href="{%url 'register'  %}">Đăng kí</a>
                     </p>
-                    </div>
-                </form>
-            </div>
-            <div class="form-box user" style="display:none;">
-                <h2><?php if(isset($_SESSION['login']['id'])){ echo "welcom ". $_SESSION['login']['username'];} ?></h2>
-                <button id="bnt4" type="button" onclick="logout()" > logout </button>
-            </div>
-        </div> 
+                </div>
+            </form>
+        </div>
+    </div>
 </body>
 </html>

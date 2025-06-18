@@ -9,10 +9,10 @@ def get_home(request):
             response = render(request, 'index.html', {'user': user})
             return response
         except json.JSONDecodeError:
-            response = redirect('/home/')
+            response = redirect('/user/')
             return response
     else:
-        response = redirect('/login/')
+        response = redirect('/user/login/')
         return response
 
 
@@ -62,8 +62,8 @@ def login_form(request):
             if response.status_code == 200:
                 data = response.json()
                 if data.get("isSuccess"):
-                    response = redirect('/')
-                    response.set_cookie('user', data.get("data"))
+                    response = redirect('/chat/')
+                    response.set_cookie('user', json.dumps(data.get("data")))
                     return response
                 else:
                     return render(request, 'login.html', {'error': data.get("reason", "Login failed")})
@@ -72,23 +72,12 @@ def login_form(request):
         except requests.exceptions.RequestException as e:
             return render(request, 'login.html', {'error': 'Unable to connect to login service.'})
     if request.COOKIES.get('user'):
-        return redirect('/')
+        return redirect('/chat/')
     return render(request, 'login.html')
 def logout(request):
-    response = redirect('/')
+    response = redirect('/user/')
     response.delete_cookie('user')
     return response
 
-# test
-# url = "https://quackquack.io.vn/api/users/login.php"
-# response = requests.post(url, json={
-#                 "email": nguyentrunghieu4390@gmail.com,
-#                 "password": hieuknguyen12
-#             })
-# if response.status_code == 200:
-#     data = response.json()
-#     if data.get("isSuccess"):
-#         print("Login successful")
-#     else:
-#         print("Login failed:", data.get("reason", "Unknown error"))
+
 

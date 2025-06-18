@@ -3,7 +3,7 @@ let reconnectInterval = null;
 let isConnecting = false;
 let user_id = null;
 
-const WEBSOCKET_URL = "ws://103.200.23.126:8000";
+const WEBSOCKET_URL = "ws://103.200.23.126:9000";
 const RECONNECT_DELAY = 3000;
 
 
@@ -26,7 +26,8 @@ function handleMessage(event) {
             case 'connected':
                 console.log("Connected message:", data);
                 break;
-            case 'message':             
+            case 'message':
+                console.log(data)
                 break;
             case 'pong':
                 console.log("Pong received:", data);
