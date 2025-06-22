@@ -3,14 +3,21 @@ let reconnectInterval = null;
 let isConnecting = false;
 let user_id = null;
 
+let lastActivity = Date.now();
+let connectionCheckInterval = null;
+let isPageVisible = true;
+
 const WEBSOCKET_URL = "ws://103.200.23.126:9000";
 const RECONNECT_DELAY = 3000;
+
+
 
 
 function handleMessage(event) {
     try {
         const data = JSON.parse(event.data);
         console.log("WebSocket message received:", data);
+        
         
         // Xử lý các loại message khác nhau
         switch(data.type) {
@@ -27,12 +34,8 @@ function handleMessage(event) {
                 console.log("Connected message:", data);
                 break;
             case 'message':
-                console.log(data)
+                console.log(data);
                 break;
-            case 'pong':
-                console.log("Pong received:", data);
-                break;
-                
         }
         
         // Reset reconnect attempts khi nhận được message thành công
@@ -44,8 +47,14 @@ function handleMessage(event) {
     }
 }
 
+
 function sendMessage(data) {
     if (websocket && websocket.readyState === WebSocket.OPEN) {
+        // Nếu là ping message, ghi lại thời gian
+        if (data.type === 'ping') {
+            pingStartTime = Date.now();
+        }
+        
         websocket.send(JSON.stringify(data));
         return true;
     } else {
@@ -107,7 +116,10 @@ function connectWebSocket(user_id) {
             }
         };
 
-        websocket.onmessage = handleMessage;
+        websocket.onmessage = function(event) {
+    received_message(event);  
+    handleMessage(event);    
+};
 
         websocket.onerror = (event) => {
             clearTimeout(connectionTimeout);
@@ -178,13 +190,127 @@ function getConnectionStatus() {
 }
 
 // Heartbeat để duy trì kết nối
-function startHeartbeat() {
-    setInterval(() => {
-        if (websocket && websocket.readyState === WebSocket.OPEN) {
-            sendMessage({
+// function startHeartbeat() {
+//     // Clear existing intervals
+//     if (connectionCheckInterval) {
+//         clearInterval(connectionCheckInterval);
+//     }
+    
+//     connectionCheckInterval = setInterval(() => {
+//         detectWakeup();
+        
+//         if (websocket && websocket.readyState === WebSocket.OPEN) {
+//             // Gửi ping để đo độ trễ
+//             sendMessage({
+//                 type: "ping",
+//                 timestamp: new Date().toISOString()
+//             });
+//         } else if (isPageVisible) {
+//             // Nếu page visible nhưng websocket không connected
+//             checkAndReconnectIfNeeded();
+//         }
+//     }, 15000); // Ping mỗi 15 giây
+// }
+
+// Thêm event listeners để detect page visibility
+
+
+// Detect khi máy wake up từ sleep
+let lastHeartbeat = Date.now();
+function detectWakeup() {
+    const now = Date.now();
+    if (now - lastHeartbeat > 35000) { // Nếu > 35s không có heartbeat
+        console.log('System wakeup detected, reconnecting...');
+        forceReconnect();
+    }
+    lastHeartbeat = now;
+}
+
+// Kiểm tra kết nối thực sự
+// async function checkRealConnection() {
+//     if (!websocket || websocket.readyState !== WebSocket.OPEN) {
+//         return false;
+//     }
+    
+//     return new Promise((resolve) => {
+//         const startTime = Date.now();
+//         const timeout = setTimeout(() => {
+//             lastPingTime = null; // Ping timeout
+//             resolve(false);
+//         }, 10000); // 10s timeout
+        
+//         const originalOnMessage = websocket.onmessage;
+        
+//         websocket.onmessage = (event) => {
+//             const data = JSON.parse(event.data);
+//             if (data.type === 'pong') {
+//                 clearTimeout(timeout);
+//                 websocket.onmessage = originalOnMessage;
+                
+//                 // Tính ping time
+//                 const pingTime = Date.now() - startTime;
+//                 lastPingTime = pingTime;
+                
+//                 // Cập nhật lịch sử
+//                 pingHistory.push(pingTime);
+//                 if (pingHistory.length > 10) {
+//                     pingHistory.shift();
+//                 }
+//                 averagePing = Math.round(pingHistory.reduce((a, b) => a + b, 0) / pingHistory.length);
+                
+//                 resolve(true);
+//             } else {
+//                 originalOnMessage(event);
+//             }
+//         };
+        
+//         // Gửi ping test
+//         pingStartTime = Date.now();
+//         sendMessage({
+//             type: "ping",
+//             timestamp: new Date().toISOString()
+//         });
+//     });
+// }
+// Force reconnect
+function forceReconnect() {
+    console.log('Forcing WebSocket reconnect...');
+    
+    // Reset ping data
+    lastPingTime = null;
+    pingHistory = [];
+    averagePing = 0;
+    pingStartTime = 0;
+    
+    if (websocket) {
+        websocket.close();
+        websocket = null;
+    }
+    
+    isConnecting = false;
+    
+    const user = getCookie('user');
+    if (user && user.user_id) {
+        setTimeout(() => {
+            connectWebSocket(parseInt(user.user_id));
+        }, 1000);
+    }
+}
+// Kiểm tra và reconnect nếu cần
+async function checkAndReconnectIfNeeded() {
+    if (!isPageVisible) return;
+    
+    
+    
+    if (!isReallyConnected) {
+        console.log('Connection test failed, reconnecting...');
+        forceReconnect();
+    }
+}
+
+setInterval(() => {
+    sendMessage({
                 type: "ping",
                 timestamp: new Date().toISOString()
             });
-        }
-    }, 30000);
-}
+}, 1000);

@@ -21,6 +21,21 @@
             justify-content: center;
             padding: 20px;
         }
+        #pingIndicator{
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            z-index: 9999;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            user-select: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
 
         .chat-container {
             display: flex;
@@ -264,50 +279,50 @@
             }
         }
         .message-form {
-    padding: 10px;
-    border-top: 1px solid #ccc;
-    background: #fff;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
+        padding: 10px;
+        border-top: 1px solid #ccc;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        }
 
-.chat-messages {
-    flex: 1;
-    padding: 20px;
-    overflow-y: auto;
-    padding-bottom: 100px;
-}
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            padding-bottom: 100px;
+        }
 
-.message {
-    background: white;
-    padding: 12px 16px;
-    margin-bottom: 10px;
-    border-radius: 18px;
-    max-width: 70%;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    display: inline-block;
-    word-wrap: break-word;
-    clear: both; /* Đảm bảo tin nhắn không ngang hàng */
-}
+        .message {
+            background: white;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            border-radius: 18px;
+            max-width: 70%;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            display: inline-block;
+            word-wrap: break-word;
+            clear: both; /* Đảm bảo tin nhắn không ngang hàng */
+        }
 
-.message.sent {
-    background: #007bff;
-    color: white;
-    float: right; /* Căn phải */
-}
+        .message.sent {
+            background: #007bff;
+            color: white;
+            float: right; /* Căn phải */
+        }
 
-.message.received {
-    background: white;
-    float: left; /* Căn trái */
-}
+        .message.received {
+            background: white;
+            float: left; /* Căn trái */
+        }
 
-/* Clearfix để tránh layout bị vỡ */
-.chat-messages::after {
-    content: "";
-    display: table;
-    clear: both;
-}
+        /* Clearfix để tránh layout bị vỡ */
+        .chat-messages::after {
+            content: "";
+            display: table;
+            clear: both;
+        }
 
         /* Form cố định dưới cùng */
         .message-form {
@@ -415,160 +430,189 @@
 
 <body>
     {{ friends|json_script:"friends-data" }}
+    {{ message|json_script:"messages-data" }}
+    <div id="pingIndicator"></div>
     <div class="chat-container">
         <div class="sidebar">
             <div class="search-container">
                 <div class="search-box">
                     <div class="search-icon">🔍</div>
                     <input type="text" class="search-input" placeholder="Tìm kiếm..." id="searchInput">
-                    <button class="add-btn" onclick="addNewContact()">+</button>
+                    <button class="add-btn" onclick="add_friends()">+</button>
                 </div>
             </div>
-            
-            <div class="contacts-list" id="contactsList">
-                
-            </div>
+            <div class="contacts-list" id="contactsList"></div>
         </div>
         
         <div class="main-content">
         <!-- Khu vực tin nhắn -->
         <div class="chat-messages">
-            <div class="message received">
-                Xin chào! Đây là tin nhắn nhận được.
-            </div>
-            <div class="message sent">
-                Đây là tin nhắn đã gửi.
-            </div>
-            <div class="message received">
-                Form tin nhắn sẽ luôn cố định ở dưới cùng màn hình.
-            </div>
-            <div class="message sent">
-                Rất tiện lợi để chat!
-            </div>
-            <div class="message received">
-                Bạn có thể cuộn lên xuống mà form vẫn ở vị trí cố định.
-            </div>
+            
         </div>
             <div id="imagePreview"></div>
             <div id="chatForm" class="message-form">
-                
                 <label for="imageInput" class="icon-button" title="Chọn ảnh">📷</label>
                 <input type="file" id="imageInput" name="image" accept="image/*" class="file-input">
                 <input type="text" id="messageInput" name="content" class="message-input" placeholder="Nhập tin nhắn…" autocomplete="off">
-                
                 <input type="hidden" id="send_receiver_id">
                 <button type="submit" class="send-button" onclick="send_message()">Gửi</button>
             </div>
         </div>
     </div>
+    <div id="add_friends">
+        <h2>Thêm bạn bè</h2>
+        <form id="addFriendForm">
+            <input type="text" id="friendUsername" placeholder="Nhập tên người dùng" required>
+            <button type="submit">Thêm</button>
+        </form>
+        <div id="friendList"></div>
+    </div>
 
+
+
+<style>
+    #add_friends {
+        position: Absolute;
+        width: 600px;
+        height: 700px;
+        background: green;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index:1001;
+    }
+</style>    
 <script src="{% static 'cookie.js' %}"></script>
 <script src="{% static 'client.js' %}"></script>
 
-    <script >
+<script >
 
     (async function initialize() {
-    const user = getCookie('user');
-    if (user && user.user_id) {
-        try {
-            connectWebSocket(parseInt(user.user_id));
-            startHeartbeat();
-            window.addEventListener('beforeunload', () => {
-                disconnectWebSocket();
-            });
-            
-            // Kiểm tra kết nối định kỳ
-            setInterval(() => {
-                const status = getConnectionStatus();
-                console.log("Connection status:", status);
+        const user = getCookie('user');
+        if (user && user.user_id) {
+            try {
+                user_id = parseInt(user.user_id); // Set global user_id
+                connectWebSocket(user_id);
+                //startHeartbeat();
                 
-                if (status === "closed" || status === "closing") {
-                    connectWebSocket(parseInt(user.user_id));
-                }
-            }, 5000);
-            
-        } catch (error) {
-            console.error("Error during WebSocket initialization:", error);
+                // Enhanced cleanup
+                window.addEventListener('beforeunload', () => {
+                    if (connectionCheckInterval) {
+                        clearInterval(connectionCheckInterval);
+                    }
+                    disconnectWebSocket();
+                });
+                
+                
+            } catch (error) {
+                console.error("Error during WebSocket initialization:", error);
+            }
+        } else {
+            console.log("Không tìm thấy user_id để kết nối WebSocket");
         }
-    } else {
-        console.log("Không tìm thấy user_id để kết nối WebSocket");
-    }
-})();
+    })();
 
     async function received_message(event) {
-    try {
-        const data = JSON.parse(event.data);
-        console.log('Nhận được dữ liệu:', data);
-        
-        if (data.type === "message") {
-            const from = String(data.from);
-            const to = String(data.to);
-            const message = String(data.message);
+        try {
+            const data = JSON.parse(event.data);
             
-            // Kiểm tra dữ liệu hợp lệ
-            if (!from || !to || !message) {
-                console.error('Dữ liệu tin nhắn không hợp lệ:', { from, to, message });
-                return;
+            // Update last activity
+            lastActivity = Date.now();
+            
+            if (data.type === "message") {
+                const from = String(data.from);
+                const to = String(data.to);
+                const message = String(data.message);
+                
+                // Kiểm tra dữ liệu hợp lệ
+                if (!from || !to || !message) {
+                    console.error('❌ Invalid message data:', { from, to, message });
+                    return;
+                }
+                
+                console.log(`📩 Message from ${from} to ${to}: ${message}`);
+                
+                const user = getCookie('user');
+                if (user && user.user_id) {
+                    let friendId, senderId, receiverId;
+                    
+                    if (from === user.user_id) {
+                        // Tin nhắn gửi đi
+                        friendId = to;
+                        senderId = from;
+                        receiverId = to;
+                    } else {
+                        // Tin nhắn nhận được
+                        friendId = from;
+                        senderId = from;
+                        receiverId = to;
+                    }
+                    
+                    try {
+                        // Lưu vào IndexedDB trước
+                        await addMessageToConversation(friendId, senderId, receiverId, message);
+                        console.log('✅ Message saved to IndexedDB');
+                        
+                        // Chỉ hiển thị UI nếu đang xem cuộc trò chuyện này
+                        const activeContact = document.querySelector('.contact-item.active');
+                        if (activeContact && activeContact.dataset.friend_id === friendId) {
+                            displayMessage(from, message, user.user_id);
+                        }
+                        
+                    } catch (saveError) {
+                        console.error('❌ Error saving message:', saveError);
+                    }
+                }
+            }
+            else if (data.type === "pong") {
+                lastPingTime = Date.now() - pingStartTime
+                updatePingIndicator(lastPingTime)
             }
             
-            console.log(`Tin nhắn từ ${from} đến ${to}: ${message}`);
-            
-            
-            const mainContent = document.querySelector('.chat-messages');
-            const newDiv = document.createElement('div');
-            const user = getCookie('user');
-            if(user && user.user_id){
-                if (from === user.user_id){
-                    await addMessageToConversation(to, from, from, message);
-                    newDiv.className = 'message sent';
-                            newDiv.textContent = message;
-                        }
-                        else{
-                            await addMessageToConversation(from, from,to, message);
-                            newDiv.className = 'message received';
-                            newDiv.textContent = message;
-                        }
-                        mainContent.appendChild(newDiv);
-            }
-            
-            
+        } catch (error) {
+            console.error('❌ Error processing received message:', error);
         }
-    }  catch (dbError) {
-                console.error('❌ Lỗi database:', dbError);
-                console.error('Chi tiết lỗi:', {
-                    name: dbError.name,
-                    message: dbError.message,
-                    stack: dbError.stack
-                });
-            }
-}
+    }
 
 
-websocket.onmessage = received_message;
+   websocket.onmessage = function(event) {
+    received_message(event);  
+    handleMessage(event);    
+};
     const friends = JSON.parse(
             document.getElementById("friends-data").textContent
         );
-        console.log(friends)
-        friends.forEach(friend => {
-    addNewContact(friend.user_id,friend.username, friend.avata, friend.status);
-});
+    document.getElementById("friends-data").remove();
+    const messages = JSON.parse(
+            document.getElementById("messages-data").textContent
+        );
+    document.getElementById("messages-data").remove();
+
+    (async ()=>{
+        for (const message of messages) {
+                const friend_id = message.friend_id;
+                for (const chat of message.chat_list) {
+                    await addMessageToConversation(friend_id, chat.sender_id, chat.receiver_id, chat.content);
+                }
+            }
+    })();
+
+    
+
+    friends.forEach(friend => {
+        addNewContact(friend.user_id,friend.username, friend.avata, friend.status);});
+    
 
         // Search functionality
         document.getElementById('searchInput').addEventListener('input', function(e) {
             const searchTerm = e.target.value.toLowerCase();
             const contacts = document.querySelectorAll('.contact-item');
-            
-            contacts.forEach(contact => {
-                const name = contact.querySelector('.contact-name').textContent.toLowerCase();
-                
-                
-                if (name.includes(searchTerm) || message.includes(searchTerm)) {
-                    contact.style.display = 'flex';
-                } else {
-                    contact.style.display = 'none';
-                }
-            });
-        });
+            let result = friends.filter(friend => friend.username.toLowerCase().includes(searchTerm));
+            document.querySelectorAll('.contact-item').forEach(el => el.remove());
+            console.log(result);
+            result.forEach(friend => {addNewContact(friend.user_id,friend.username, friend.avata, friend.status);});
+        })
+
+      
 
 
         function openChatDatabase() {
@@ -613,22 +657,18 @@ websocket.onmessage = received_message;
         }
         // Thêm tin nhắn mới vào cuộc trò chuyện
         async function addMessageToConversation(friendId, senderId, receiverId, messageData) {
-            console.log('🔄 Bắt đầu lưu tin nhắn:', { friendId, senderId, receiverId, messageData });
+           
             
             try {
                 const db = await openChatDatabase();
-                console.log('✅ Database opened successfully');
                 
                 return new Promise(async (resolve, reject) => {
                     try {
                         // Lấy cuộc trò chuyện hiện tại
-                        console.log('🔍 Đang tìm cuộc trò chuyện với friend_id:', friendId);
                         let conversation = await getConversation(friendId);
-                        console.log('📝 Cuộc trò chuyện hiện tại:', conversation);
                         
                         // Nếu chưa có cuộc trò chuyện, tạo mới
                         if (!conversation) {
-                            console.log('🆕 Tạo cuộc trò chuyện mới');
                             conversation = {
                                 friend_id: friendId,
                                 chat_list: []
@@ -642,51 +682,96 @@ websocket.onmessage = received_message;
                             data: messageData,
                             timestamp: new Date().toISOString()
                         };
-                        console.log('📤 Tin nhắn mới:', newMessage);
                         
                         conversation.chat_list.push(newMessage);
-                        console.log('📋 Danh sách tin nhắn sau khi thêm:', conversation.chat_list);
                         
-                        // Lưu lại cuộc trò chuyện
+                        // Lưu với transaction mới
                         const transaction = db.transaction(['conversations'], 'readwrite');
                         const objectStore = transaction.objectStore('conversations');
                         const request = objectStore.put(conversation);
                         
-                        request.onsuccess = () => {
-                            console.log('✅ Lưu thành công vào IndexedDB');
+                        // Đợi transaction hoàn thành hoàn toàn
+                        transaction.oncomplete = () => {
                             resolve(newMessage);
                         };
                         
-                        request.onerror = (error) => {
-                            console.error('❌ Lỗi khi lưu vào objectStore:', error);
+                        transaction.onerror = (event) => {
+                            console.error('❌ Save transaction error:', event);
+                            reject(transaction.error);
+                        };
+                        
+                        request.onerror = (event) => {
+                            console.error('❌ Save request error:', event);
                             reject(request.error);
                         };
                         
                     } catch (innerError) {
-                        console.error('❌ Lỗi trong Promise:', innerError);
+                        console.error('❌ Inner error:', innerError);
                         reject(innerError);
                     }
                 });
                 
             } catch (dbError) {
-                console.error('❌ Lỗi khi mở database:', dbError);
+                console.error('❌ Database error:', dbError);
                 throw dbError;
             }
         }
         // Lấy cuộc trò chuyện với một friend
-        async function getConversation(friendId) {
-            console.log(friendId)
+       async function getConversation(friendId) {
+            
             const db = await openChatDatabase();
             
             return new Promise((resolve, reject) => {
                 const transaction = db.transaction(['conversations'], 'readonly');
                 const objectStore = transaction.objectStore('conversations');
+                
+                // Thử cả string và number
+                const friendIdStr = String(friendId);
+                const friendIdNum = Number(friendId);
+                
+        
+                
                 const request = objectStore.get(friendId);
                 
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = () => reject(request.error);
+                request.onsuccess = () => {
+                    
+                    
+                    // Nếu không tìm thấy với friendId gốc, thử với string/number
+                    if (!request.result) {
+            
+                        
+                        const requestStr = objectStore.get(friendIdStr);
+                        requestStr.onsuccess = () => {
+                            if (requestStr.result) {
+                                console.log('✅ Found with string format:', requestStr.result);
+                                resolve(requestStr.result);
+                            } else {
+                                const requestNum = objectStore.get(friendIdNum);
+                                requestNum.onsuccess = () => {
+                                   
+                                    resolve(requestNum.result);
+                                };
+                                requestNum.onerror = () => reject(requestNum.error);
+                            }
+                        };
+                        requestStr.onerror = () => reject(requestStr.error);
+                    } else {
+                        resolve(request.result);
+                    }
+                };
+                
+                request.onerror = () => {
+                    console.error('❌ Request error:', request.error);
+                    reject(request.error);
+                };
+                
+                transaction.onerror = () => {
+                    console.error('❌ Transaction error:', transaction.error);
+                    reject(transaction.error);
+                };
             });
         }
+
         // Lấy tất cả cuộc trò chuyện
         async function getAllConversations() {
             const db = await openChatDatabase();
@@ -766,58 +851,103 @@ websocket.onmessage = received_message;
             
             return results;
         }
+        // debug
+        async function debugIndexedDB() {
+            try {
+                console.log('🔍 === DEBUGGING INDEXEDDB ===');
+                
+                const db = await openChatDatabase();
+                console.log('✅ Database opened:', db.name, 'version:', db.version);
+                
+                // Kiểm tra object stores
+                console.log('📋 Object stores:', Array.from(db.objectStoreNames));
+                
+                // Lấy tất cả dữ liệu
+                const allConversations = await getAllConversations();
+                console.log('💬 All conversations:', allConversations);
+                
+                // Kiểm tra từng conversation
+                if (allConversations.length === 0) {
+                    console.log('⚠️ No conversations found in database');
+                } else {
+                    allConversations.forEach((conv, index) => {
+                        console.log(`📝 Conversation ${index}:`, {
+                            friend_id: conv.friend_id,
+                            friend_id_type: typeof conv.friend_id,
+                            message_count: conv.chat_list?.length || 0,
+                            messages: conv.chat_list
+                        });
+                    });
+                }
+                
+                return allConversations;
+            } catch (error) {
+                console.error('❌ Debug error:', error);
+            }
+        }
 
 
-        
-        
+
+
 
         // Contact selection
         async function selectContact(element) {
             document.querySelectorAll('.contact-item')
-            .forEach(e => e.classList.toggle('active', e === element));
+                .forEach(e => e.classList.toggle('active', e === element));
+            
             const friend_id = element.dataset.friend_id;
-            document.getElementById("send_receiver_id").value = friend_id
-
-            // xóa các liên hệ cũ đã chọn
+            document.getElementById("send_receiver_id").value = friend_id;
+            
+            // Xóa các liên hệ cũ đã chọn
             document.querySelectorAll('.contact-item').forEach(item => {
                 item.classList.remove('active');
             });
             
-            // thêm active liên hệ đã chọn
+            // Thêm active liên hệ đã chọn
             element.classList.add('active');
-        
             
-            
-            // thông báo tin nhắn đã đọc
+            // Thông báo tin nhắn đã đọc
             const badge = element.querySelector('.unread-badge');
             if (badge) {
                 badge.style.opacity = '0';
                 setTimeout(() => badge.remove(), 300);
             }
+            
             const container = document.querySelector('.chat-messages');
             if (!container) return;
             container.innerHTML = '';
             
-            const conversation = await getConversation(friend_id);
-            const mainContent = document.querySelector('.chat-messages');
-            if(conversation && conversation.chat_list){
-                console.log(true)
-                conversation.chat_list.forEach(message=>{
-                    const newDiv = document.createElement('div');
-                    if (message.sender_id == friend_id){
-                        newDiv.className = 'message received';
-                        newDiv.textContent = message.data;
-                        
-                    }
-                    else{
-                        newDiv.className = 'message sent';
-                        newDiv.textContent = message.data;
-                    }
-                    mainContent.appendChild(newDiv);
-                })
+            try {
+                // Thêm delay nhỏ để đảm bảo IndexedDB đã được cập nhật
+                await new Promise(resolve => setTimeout(resolve, 50));
+                
+                const conversation = await getConversation(friend_id);
+                
+                
+                if (conversation && conversation.chat_list) {
+                    const mainContent = document.querySelector('.chat-messages');
+                    conversation.chat_list.forEach(message => {
+                        const newDiv = document.createElement('div');
+                        if (message.sender_id == friend_id) {
+                            newDiv.className = 'message received';
+                            newDiv.textContent = message.data;
+                        } else {
+                            newDiv.className = 'message sent';
+                            newDiv.textContent = message.data;
+                        }
+                        mainContent.appendChild(newDiv);
+                    });
+                    
+                    // Scroll xuống cuối
+                    mainContent.scrollTop = mainContent.scrollHeight;
+                }
+            } catch (error) {
+                console.error('❌ Error loading conversation:', error);
             }
         }
         
+
+
         window.addEventListener('beforeunload', () => {
                 deleteAllConversations()
             });
@@ -871,7 +1001,10 @@ websocket.onmessage = received_message;
 
 
 
-    // gửi tin nhắn bằng nút
+    
+    
+    
+        // gửi tin nhắn bằng nút
     function send_message(){
         message = document.getElementById("messageInput")
         send_receiver_id = document.getElementById("send_receiver_id").value
@@ -886,35 +1019,82 @@ websocket.onmessage = received_message;
     }
     // gửi tin nhắn bằng phím enter
     document.getElementById("messageInput").addEventListener("keydown", function(e) {
-    if (e.key === "Enter") {
-        e.preventDefault(); // không xuống dòng
-        const message = this.value.trim();
-        const send_receiver_id = document.getElementById("send_receiver_id").value;
-
-        if (message) {
-            sendMessage({
-                type: "message",
-                to: send_receiver_id,
-                message: message,
-                timestamp: new Date().toISOString()
-            });
-            this.value = "";
+        if (e.key === "Enter") {
+            e.preventDefault();
+            send_message();
         }
+    });
+
+    document.getElementById('imageInput').addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        const preview = document.getElementById('imagePreview');
+        if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.innerHTML = `<img src="${e.target.result}" style="max-width: 200px; border-radius: 8px;">`;
+            };
+            reader.readAsDataURL(file);
+        } else {
+            preview.innerHTML = '';
+        }
+    });
+    function displayMessage(from, message, currentUserId) {
+        const mainContent = document.querySelector('.chat-messages');
+        if (!mainContent) return;
+        
+        const newDiv = document.createElement('div');
+        
+        if (from === currentUserId) {
+            newDiv.className = 'message sent';
+        } else {
+            newDiv.className = 'message received';
+        }
+        
+        newDiv.textContent = message;
+        mainContent.appendChild(newDiv);
+        
+        // Scroll xuống cuối
+        mainContent.scrollTop = mainContent.scrollHeight;
+    }
+
+    
+
+    window.addEventListener('beforeunload', () => {
+        if (connectionCheckInterval) {
+            clearInterval(connectionCheckInterval);
+            
+        }
+        disconnectWebSocket();
+    });
+
+// Hàm cập nhật ping indicator
+    function updatePingIndicator(lastPingTime) {
+    
+        let indicator = document.getElementById('pingIndicator');
+        if (getConnectionStatus() === "connected") {
+            document.getElementById('pingIndicator').innerHTML = `${lastPingTime}ms`;
+        }
+        
+    }
+
+    setInterval(() =>{
+        if (getConnectionStatus() != "connected") {
+                document.getElementById('pingIndicator').innerHTML = `đang kết nối`;
+            }
+    },1500)
+    
+document.addEventListener('visibilitychange', () => {
+    isPageVisible = !document.hidden;
+    if (isPageVisible) {
+        console.log('Page became visible, checking connection...');
+        checkAndReconnectIfNeeded();
     }
 });
-document.getElementById('imageInput').addEventListener('change', function(event) {
-    const file = event.target.files[0];
-    const preview = document.getElementById('imagePreview');
-    if (file && file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            preview.innerHTML = `<img src="${e.target.result}" style="max-width: 200px; border-radius: 8px;">`;
-        };
-        reader.readAsDataURL(file);
-    } else {
-        preview.innerHTML = '';
-    }
-});
+
+function add_friends(){
+    
+
+}
 
     </script>
 </body>
