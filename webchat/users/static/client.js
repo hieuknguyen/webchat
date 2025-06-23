@@ -16,7 +16,7 @@ const RECONNECT_DELAY = 3000;
 function handleMessage(event) {
     try {
         const data = JSON.parse(event.data);
-        console.log("WebSocket message received:", data);
+     
         
         
         // Xử lý các loại message khác nhau
@@ -33,9 +33,7 @@ function handleMessage(event) {
             case 'connected':
                 console.log("Connected message:", data);
                 break;
-            case 'message':
-                console.log(data);
-                break;
+            
         }
         
         // Reset reconnect attempts khi nhận được message thành công
@@ -65,12 +63,10 @@ function sendMessage(data) {
 
 function connectWebSocket(user_id) {
     if (isConnecting || (websocket && websocket.readyState === WebSocket.CONNECTING)) {
-        console.log("WebSocket is already connecting...");
         return;
     }
 
     if (websocket && websocket.readyState === WebSocket.OPEN) {
-        console.log("WebSocket is already connected");
         return;
     }
 
@@ -85,7 +81,6 @@ function connectWebSocket(user_id) {
         const connectionTimeout = setTimeout(() => {
             if (websocket.readyState === WebSocket.CONNECTING) {
                 websocket.close();
-                console.error("WebSocket connection timeout");
             }
         }, 10000); // 10 giây timeout
 
@@ -94,7 +89,7 @@ function connectWebSocket(user_id) {
             isConnecting = false;
             reconnectAttempts = 0;
             
-            console.log("WebSocket connected successfully");
+        
             
             // Gửi thông tin user_id
             const data = {
@@ -104,7 +99,7 @@ function connectWebSocket(user_id) {
             };
             
             websocket.send(JSON.stringify(data));
-            console.log("User ID sent:", user_id);
+           
             
             // Clear any existing reconnect interval
             if (reconnectInterval) {
@@ -131,7 +126,7 @@ function connectWebSocket(user_id) {
             clearTimeout(connectionTimeout);
             isConnecting = false;
             
-            console.log(`WebSocket closed. Code: ${event.code}, Reason: ${event.reason}`);
+       
             
             // Chỉ reconnect nếu không phải do user chủ động đóng
             if (event.code !== 1000 ) {
@@ -274,7 +269,7 @@ function detectWakeup() {
 // }
 // Force reconnect
 function forceReconnect() {
-    console.log('Forcing WebSocket reconnect...');
+
     
     // Reset ping data
     lastPingTime = null;
@@ -303,7 +298,6 @@ async function checkAndReconnectIfNeeded() {
     
     
     if (!isReallyConnected) {
-        console.log('Connection test failed, reconnecting...');
         forceReconnect();
     }
 }

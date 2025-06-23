@@ -21,6 +21,10 @@
             justify-content: center;
             padding: 20px;
         }
+        .blur-all > :not(#FriendForm ) {
+            filter: blur(30px);
+        }
+        
         #pingIndicator{
             position: fixed;
             top: 10px;
@@ -459,26 +463,183 @@
             </div>
         </div>
     </div>
-    <div id="add_friends">
+    <div id="FriendForm" style="display: none;">
         <h2>Thêm bạn bè</h2>
-        <form id="addFriendForm">
-            <input type="text" id="friendUsername" placeholder="Nhập tên người dùng" required>
-            <button type="submit">Thêm</button>
+        <form id="searchUser">
+            <input type="text" id="seachUsername" placeholder="Nhập tên người dùng" required>
         </form>
-        <div id="friendList"></div>
+        <div id="add_friends">
+        
+        
+        <div id="friendList">
+            <div class="friend-item">
+                <img src="https://quackquack.io.vn/api/users/avata/a.png" alt="Avatar" class="avatar" />
+                <span class="friend-name">Nguyễn Trung Hiếu</span>
+                <span class="add-friend" title="Add friend">+</span>
+            </div>
+        </div>
     </div>
+</body>
+    
 
 
 
 <style>
-    #add_friends {
-        position: Absolute;
+    #FriendForm {
+        position: absolute;
+        background:white;
         width: 600px;
         height: 700px;
-        background: green;
         left: 50%;
         transform: translateX(-50%);
-        z-index:1001;
+        z-index: 1001;
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+        box-sizing: border-box;
+        border-radius: 8px;
+        color: black;
+        
+    }
+    #FriendForm , #FriendForm  * {
+            filter: none !important;
+        }
+
+    #FriendForm h2 {
+        margin: 0 0 15px 0;
+        flex: 0 0 auto;
+        text-align: center;
+    }
+
+    #searchUser {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex: 0 0 auto;
+        color: black;
+    }
+    #searchUser input[type="text"] {
+        height: 50px;
+        border: 1px solid black;
+        font-size: 18px;
+    }
+    #seachUsername {
+        flex: 1;
+        height: 40px;
+        padding: 0 10px;
+        border: none;
+        border-radius: 4px;
+        font-size: 14px;
+        outline: none;
+    }
+
+    
+
+    #searchUser button:hover {
+        background: #45a049;
+    }
+
+    #add_friends {
+        flex: 1; /* Chiếm toàn bộ không gian còn lại */
+        display: flex;
+        flex-direction: column;
+        min-height: 0; /* Quan trọng cho flexbox scroll */
+    }
+
+    #friendList {
+        flex: 1;
+        overflow-y: auto;
+        box-sizing: border-box;
+        border-radius: 4px;
+        padding: 10px;
+    }
+
+    .friend-item {
+        display: flex;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.9);
+        margin-bottom: 10px;
+        padding: 12px;
+        border-radius: 6px;
+        color: black;
+        gap: 12px;
+        box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .friend-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        flex: 0 0 auto;
+    }
+
+    .friend-name {
+        flex: 1;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .add-friend {
+        font-size: 24px;
+        font-weight: 700;
+        cursor: pointer;
+        user-select: none;
+        transition: transform .15s;
+        color: #4CAF50;
+        flex: 0 0 auto;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: rgba(76, 175, 80, 0.1);
+    }
+
+    .add-friend:hover {
+        transform: scale(1.2);
+        background: rgba(76, 175, 80, 0.2);
+    }
+
+    /* Custom scrollbar */
+    #friendList::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    #friendList::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+    }
+
+    #friendList::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 3px;
+    }
+
+    #friendList::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.5);
+    }
+
+    /* Button để test thêm bạn */
+    .test-btn {
+        margin-top: 20px;
+        padding: 10px 20px;
+        background: #2196F3;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .test-btn:hover {
+        background: #1976D2;
     }
 </style>    
 <script src="{% static 'cookie.js' %}"></script>
@@ -525,12 +686,11 @@
                 
                 // Kiểm tra dữ liệu hợp lệ
                 if (!from || !to || !message) {
-                    console.error('❌ Invalid message data:', { from, to, message });
+                    
                     return;
                 }
                 
-                console.log(`📩 Message from ${from} to ${to}: ${message}`);
-                
+            
                 const user = getCookie('user');
                 if (user && user.user_id) {
                     let friendId, senderId, receiverId;
@@ -550,7 +710,7 @@
                     try {
                         // Lưu vào IndexedDB trước
                         await addMessageToConversation(friendId, senderId, receiverId, message);
-                        console.log('✅ Message saved to IndexedDB');
+                     
                         
                         // Chỉ hiển thị UI nếu đang xem cuộc trò chuyện này
                         const activeContact = document.querySelector('.contact-item.active');
@@ -608,7 +768,6 @@
             const contacts = document.querySelectorAll('.contact-item');
             let result = friends.filter(friend => friend.username.toLowerCase().includes(searchTerm));
             document.querySelectorAll('.contact-item').forEach(el => el.remove());
-            console.log(result);
             result.forEach(friend => {addNewContact(friend.user_id,friend.username, friend.avata, friend.status);});
         })
 
@@ -743,7 +902,6 @@
                         const requestStr = objectStore.get(friendIdStr);
                         requestStr.onsuccess = () => {
                             if (requestStr.result) {
-                                console.log('✅ Found with string format:', requestStr.result);
                                 resolve(requestStr.result);
                             } else {
                                 const requestNum = objectStore.get(friendIdNum);
@@ -812,11 +970,9 @@
                 // Chờ tất cả hoàn thành
                 await Promise.all(deletePromises);
                 
-                console.log('Đã xóa tất cả cuộc trò chuyện');
                 return true;
                 
             } catch (error) {
-                console.error('Lỗi khi xóa tất cả cuộc trò chuyện:', error);
                 throw error;
             }
         }
@@ -851,45 +1007,6 @@
             
             return results;
         }
-        // debug
-        async function debugIndexedDB() {
-            try {
-                console.log('🔍 === DEBUGGING INDEXEDDB ===');
-                
-                const db = await openChatDatabase();
-                console.log('✅ Database opened:', db.name, 'version:', db.version);
-                
-                // Kiểm tra object stores
-                console.log('📋 Object stores:', Array.from(db.objectStoreNames));
-                
-                // Lấy tất cả dữ liệu
-                const allConversations = await getAllConversations();
-                console.log('💬 All conversations:', allConversations);
-                
-                // Kiểm tra từng conversation
-                if (allConversations.length === 0) {
-                    console.log('⚠️ No conversations found in database');
-                } else {
-                    allConversations.forEach((conv, index) => {
-                        console.log(`📝 Conversation ${index}:`, {
-                            friend_id: conv.friend_id,
-                            friend_id_type: typeof conv.friend_id,
-                            message_count: conv.chat_list?.length || 0,
-                            messages: conv.chat_list
-                        });
-                    });
-                }
-                
-                return allConversations;
-            } catch (error) {
-                console.error('❌ Debug error:', error);
-            }
-        }
-
-
-
-
-
         // Contact selection
         async function selectContact(element) {
             document.querySelectorAll('.contact-item')
@@ -1086,7 +1203,6 @@
 document.addEventListener('visibilitychange', () => {
     isPageVisible = !document.hidden;
     if (isPageVisible) {
-        console.log('Page became visible, checking connection...');
         checkAndReconnectIfNeeded();
     }
 });
@@ -1095,6 +1211,82 @@ function add_friends(){
     
 
 }
+    document.getElementById('seachUsername').addEventListener('input', debounce(async e => {
+    try {
+        if(e.target.value.trim() === '') {
+            document.getElementById('friendList').innerHTML = ''; // Clear the list if input is empty
+            return;
+        }
+        const result = await API('http://127.0.0.1:8000/user/seachUsers/', {
+            username: e.target.value.trim()
+        });
+        
+        if (result) {
+            const friendList = document.getElementById('friendList');
+            friendList.innerHTML = ''; // Clear previous results
+            console.log('Friend list:', result);
+    result.data.forEach(friend => {
+        console.log('Friend:', friend.avata, friend.username, friend.user_id);
+        const friendItem = document.createElement('div');
+        friendItem.className = 'friend-item';
+        friendItem.innerHTML = `
+            <img src="${friend.avata}" alt="Avatar" class="avatar" />
+            <span class="friend-name">${friend.username}</span>
+            <span class="add-friend" title="Add friend">+</span>
+        `;
+        friendList.appendChild(friendItem);
+    });
+}
+
+    }
+    catch (error) {
+        console.error('Search failed:', error);
+    }
+}));
+function debounce(fn, delay = 500) {
+  let timeout;
+  return (...args) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => fn.apply(this, args), delay);
+  };
+}
+
+async function API(url, data) {
+  
+    
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        
+       
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+        
+        const result = await response.json();
+        return result;
+        
+    } catch (error) {
+        console.error('API call failed:', error);
+        throw error;
+    }
+}
+    function add_friends(){
+        const friendForm = document.getElementById('FriendForm');
+        if (friendForm.style.display === 'none' || friendForm.style.display === '') {
+            friendForm.style.display = 'flex';
+            document.body.classList.add('blur-all');
+            
+        } else {
+            friendForm.style.display = 'none';
+        }
+    }
 
     </script>
 </body>

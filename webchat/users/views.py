@@ -81,3 +81,44 @@ def logout(request):
 
 
 
+@csrf_exempt  # Tắt CSRF cho API (hoặc dùng CSRF token)
+def seach_users(request):
+    import json
+    from django.http import JsonResponse
+    from django.views.decorators.csrf import csrf_exempt
+    if request.method == 'POST':
+        try:
+            # Đọc JSON từ request body
+            data = json.loads(request.body)
+            user_name = data.get('username', '')
+            api_url = "https://quackquack.io.vn/api/friends/seach_users.php"
+            try:
+                response = requests.post(api_url, data={"username": user_name})
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if data.get("isSuccess"):
+                        return JsonResponse({
+                            'isSuccess': True,
+                            'data': response.json().get("data", []),
+                        })
+                    else:
+                        return JsonResponse({
+                            'isSuccess': False,
+                            'reason': "api error",
+                        })
+                else:
+                    return JsonResponse({
+                            'isSuccess': False,
+                            'reason': "api error",
+                        })
+            except requests.exceptions.RequestException as e:
+                return JsonResponse({
+                            'isSuccess': False,
+                            'reason': "api error",
+                        })
+        except json.JSONDecodeError:
+            return JsonResponse({
+                'success': False,
+                'error': 'Invalid JSON data'
+            }, status=400)
