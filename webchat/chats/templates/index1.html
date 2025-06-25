@@ -21,7 +21,7 @@
             justify-content: center;
             padding: 20px;
         }
-        .blur-all > :not(#FriendForm ) {
+        .blur-all > :not(#FriendForm ):not(#notificationList) {
             filter: blur(30px);
         }
         
@@ -435,14 +435,24 @@
 <body>
     {{ friends|json_script:"friends-data" }}
     {{ message|json_script:"messages-data" }}
+    {{ friends_list_pending|json_script:"friends_list_pending-data" }}
     <div id="pingIndicator"></div>
     <div class="chat-container">
         <div class="sidebar">
+            
+            <div style="display: flex;justify-content: flex-end;">
+            <div class="aaa" onclick="notification()">
+                <span class="notification-dot"></span>
+                <ion-icon name="notifications-outline" class="Notification"</ion-icon>
+            </div>
+            <ion-icon name="person-outline" style="padding:10px"></ion-icon>
+
+            </div>
             <div class="search-container">
                 <div class="search-box">
                     <div class="search-icon">🔍</div>
                     <input type="text" class="search-input" placeholder="Tìm kiếm..." id="searchInput">
-                    <button class="add-btn" onclick="add_friends()">+</button>
+                    <button class="add-btn" onclick="openFriendForm()">+</button>
                 </div>
             </div>
             <div class="contacts-list" id="contactsList"></div>
@@ -464,20 +474,31 @@
         </div>
     </div>
     <div id="FriendForm" style="display: none;">
-        <h2>Thêm bạn bè</h2>
+        <span onclick="closeFriendForm()" class="icon-close">
+                <ion-icon onclick="close_login()" name="close"></ion-icon>
+        </span>
+        <h2 class="title">Thêm bạn bè</h2>
         <form id="searchUser">
             <input type="text" id="seachUsername" placeholder="Nhập tên người dùng" required>
         </form>
         <div id="add_friends">
         
         
-        <div id="friendList">
-            <div class="friend-item">
-                <img src="https://quackquack.io.vn/api/users/avata/a.png" alt="Avatar" class="avatar" />
-                <span class="friend-name">Nguyễn Trung Hiếu</span>
-                <span class="add-friend" title="Add friend">+</span>
+            <div id="friendList">
+                <div class="friend-item">
+                    <img src="https://quackquack.io.vn/api/users/avata/a.png" alt="Avatar" class="avatar" />
+                    <span class="friend-name">Nguyễn Trung Hiếu</span>
+                    <span class="add-friend" title="Add friend">+</span>
+                </div>
             </div>
         </div>
+    </div>
+    <div id="notificationList" style="display: none;" >
+        <span onclick="closeNotificationList()" class="icon-close">
+            <ion-icon onclick="close_login()" name="close"></ion-icon>
+        </span>
+        <h2 class="title">Thông Báo</h2>
+
     </div>
 </body>
     
@@ -485,6 +506,24 @@
 
 
 <style>
+    .aaa{
+position: relative;
+
+    }
+    .Notification{
+        
+        padding: 10px;
+    }
+    .notification-dot {
+  position: absolute;
+  top: 11px;
+  right: 12px;
+  width: 5px;
+  height: 5px;
+  background: red;
+  border-radius: 50%;
+ z-index: 2000; /* Đảm bảo nó nằm trên cùng */
+}
     #FriendForm {
         position: absolute;
         background:white;
@@ -501,11 +540,32 @@
         color: black;
         
     }
+    #notificationList {
+        position: absolute;
+        background:white;
+        width: 600px;
+        height: 700px;
+        left: 50%;
+        
+        transform: translateX(-50%);
+        z-index: 1001;
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+        box-sizing: border-box;
+        border-radius: 8px;
+        color: black;
+        
+    }
+
+    #notificationList, #notificationList *{
+        filter: none !important;
+    }
     #FriendForm , #FriendForm  * {
             filter: none !important;
         }
 
-    #FriendForm h2 {
+    .title {
         margin: 0 0 15px 0;
         flex: 0 0 auto;
         text-align: center;
@@ -641,10 +701,43 @@
     .test-btn:hover {
         background: #1976D2;
     }
+    .icon-close{
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 45px;
+    height: 45px;
+    background: #162938;
+    font-size: 2em;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-bottom-left-radius: 20px;
+    cursor: pointer;
+    z-index: 1;
+}
+    .icon-accepted, .icon-cancel{
+        font-size: 2em;
+    }
+    
+    .icon-accepted:hover{
+        color:rgb(76, 175, 80);
+        background: rgba(76, 175, 80, 0.1);
+        border-radius: 50%;
+        cursor: pointer;
+    }
+    .icon-cancel:hover{
+        color:rgb(244, 67, 54);
+        background: rgba(244, 67, 54, 0.1);
+        border-radius: 50%;
+        cursor: pointer;
+    }
 </style>    
 <script src="{% static 'cookie.js' %}"></script>
 <script src="{% static 'client.js' %}"></script>
-
+<script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 <script >
 
     (async function initialize() {
@@ -727,7 +820,19 @@
                 lastPingTime = Date.now() - pingStartTime
                 updatePingIndicator(lastPingTime)
             }
-            
+            else if(data.type === "notification") {
+                const notificationLis = document.getElementById('notificationList');
+                const friendItem = document.createElement('div');
+                friendItem.className = 'friend-item';
+
+                friendItem.innerHTML = `
+                    <img src="${data.avata}" alt="Avatar" class="avatar" />
+                    <span class="friend-name">${data.username}</span>
+                    <ion-icon name="close-outline"></ion-icon>
+                    <ion-icon name="checkmark-outline" icon-accepted></ion-icon>
+                `;
+                notificationLis.appendChild(friendItem);
+            }
         } catch (error) {
             console.error('❌ Error processing received message:', error);
         }
@@ -742,6 +847,10 @@
             document.getElementById("friends-data").textContent
         );
     document.getElementById("friends-data").remove();
+    const friends_list_pending = JSON.parse(
+            document.getElementById("friends_list_pending-data").textContent
+        );
+    document.getElementById("friends_list_pending-data").remove();
     const messages = JSON.parse(
             document.getElementById("messages-data").textContent
         );
@@ -759,371 +868,373 @@
     
 
     friends.forEach(friend => {
-        addNewContact(friend.user_id,friend.username, friend.avata, friend.status);});
+        addNewContact(friend.user_id,friend.username, friend.avata, friend.status);
+    });
     
 
-        // Search functionality
-        document.getElementById('searchInput').addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase();
-            const contacts = document.querySelectorAll('.contact-item');
-            let result = friends.filter(friend => friend.username.toLowerCase().includes(searchTerm));
-            document.querySelectorAll('.contact-item').forEach(el => el.remove());
-            result.forEach(friend => {addNewContact(friend.user_id,friend.username, friend.avata, friend.status);});
-        })
+    friends_list_pending.forEach(friend => {
+        const notificationLis = document.getElementById('notificationList');
+        const friendItem = document.createElement('div');
+        friendItem.className = 'friend-item';
 
-      
+        friendItem.innerHTML = `
+            <img src="${friend.avata}" alt="Avatar" class="avatar" />
+            <span class="friend-name">${friend.username}</span>
+            <ion-icon name="close-outline" class="icon-cancel"></ion-icon>
+            <ion-icon name="checkmark-outline" class="icon-accepted"></ion-icon>
+        `;
+        notificationLis.appendChild(friendItem);
 
+    });
 
-        function openChatDatabase() {
-            return new Promise((resolve, reject) => {
-                const request = indexedDB.open('ChatDatabase', 1);
-                
-                request.onerror = () => reject(request.error);
-                request.onsuccess = () => resolve(request.result);
-                
-                // Tạo object store khi database được tạo lần đầu
-                request.onupgradeneeded = (event) => {
-                    const db = event.target.result;
-                    
-                    // Tạo object store cho conversations
-                    const conversationStore = db.createObjectStore('conversations', { 
-                        keyPath: 'friend_id' // friend_id làm khóa chính
-                    });
-                    
-                    // Tạo index để tìm kiếm nhanh
-                    conversationStore.createIndex('friend_id', 'friend_id', { unique: true });
-                };
-            });
-        }
-        // Thêm hoặc cập nhật cuộc trò chuyện với một friend
-        async function saveConversation(friendId, chatList) {
-            const db = await openChatDatabase();
+    // Search friends
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const contacts = document.querySelectorAll('.contact-item');
+        let result = friends.filter(friend => friend.username.toLowerCase().includes(searchTerm));
+        document.querySelectorAll('.contact-item').forEach(el => el.remove());
+        result.forEach(friend => {addNewContact(friend.user_id,friend.username, friend.avata, friend.status);});
+    })
+    function openChatDatabase() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open('ChatDatabase', 1);
             
-            return new Promise((resolve, reject) => {
-                const transaction = db.transaction(['conversations'], 'readwrite');
-                const objectStore = transaction.objectStore('conversations');
-                
-                const conversationData = {
-                    friend_id: friendId,
-                    chat_list: chatList
-                };
-                
-                const request = objectStore.put(conversationData);
-                
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = () => reject(request.error);
-            });
-        }
-        // Thêm tin nhắn mới vào cuộc trò chuyện
-        async function addMessageToConversation(friendId, senderId, receiverId, messageData) {
-           
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => resolve(request.result);
             
-            try {
-                const db = await openChatDatabase();
+            // Tạo object store khi database được tạo lần đầu
+            request.onupgradeneeded = (event) => {
+                const db = event.target.result;
                 
-                return new Promise(async (resolve, reject) => {
-                    try {
-                        // Lấy cuộc trò chuyện hiện tại
-                        let conversation = await getConversation(friendId);
-                        
-                        // Nếu chưa có cuộc trò chuyện, tạo mới
-                        if (!conversation) {
-                            conversation = {
-                                friend_id: friendId,
-                                chat_list: []
-                            };
-                        }
-                        
-                        // Thêm tin nhắn mới
-                        const newMessage = {
-                            sender_id: senderId,
-                            receiver_id: receiverId,
-                            data: messageData,
-                            timestamp: new Date().toISOString()
-                        };
-                        
-                        conversation.chat_list.push(newMessage);
-                        
-                        // Lưu với transaction mới
-                        const transaction = db.transaction(['conversations'], 'readwrite');
-                        const objectStore = transaction.objectStore('conversations');
-                        const request = objectStore.put(conversation);
-                        
-                        // Đợi transaction hoàn thành hoàn toàn
-                        transaction.oncomplete = () => {
-                            resolve(newMessage);
-                        };
-                        
-                        transaction.onerror = (event) => {
-                            console.error('❌ Save transaction error:', event);
-                            reject(transaction.error);
-                        };
-                        
-                        request.onerror = (event) => {
-                            console.error('❌ Save request error:', event);
-                            reject(request.error);
-                        };
-                        
-                    } catch (innerError) {
-                        console.error('❌ Inner error:', innerError);
-                        reject(innerError);
-                    }
+                // Tạo object store cho conversations
+                const conversationStore = db.createObjectStore('conversations', { 
+                    keyPath: 'friend_id' // friend_id làm khóa chính
                 });
                 
-            } catch (dbError) {
-                console.error('❌ Database error:', dbError);
-                throw dbError;
-            }
-        }
-        // Lấy cuộc trò chuyện với một friend
-       async function getConversation(friendId) {
-            
-            const db = await openChatDatabase();
-            
-            return new Promise((resolve, reject) => {
-                const transaction = db.transaction(['conversations'], 'readonly');
-                const objectStore = transaction.objectStore('conversations');
-                
-                // Thử cả string và number
-                const friendIdStr = String(friendId);
-                const friendIdNum = Number(friendId);
-                
+                // Tạo index để tìm kiếm nhanh
+                conversationStore.createIndex('friend_id', 'friend_id', { unique: true });
+            };
+        });
+    }
+    // Thêm hoặc cập nhật cuộc trò chuyện với một friend
+    async function saveConversation(friendId, chatList) {
+        const db = await openChatDatabase();
         
-                
-                const request = objectStore.get(friendId);
-                
-                request.onsuccess = () => {
-                    
-                    
-                    // Nếu không tìm thấy với friendId gốc, thử với string/number
-                    if (!request.result) {
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction(['conversations'], 'readwrite');
+            const objectStore = transaction.objectStore('conversations');
             
-                        
-                        const requestStr = objectStore.get(friendIdStr);
-                        requestStr.onsuccess = () => {
-                            if (requestStr.result) {
-                                resolve(requestStr.result);
-                            } else {
-                                const requestNum = objectStore.get(friendIdNum);
-                                requestNum.onsuccess = () => {
-                                   
-                                    resolve(requestNum.result);
-                                };
-                                requestNum.onerror = () => reject(requestNum.error);
-                            }
+            const conversationData = {
+                friend_id: friendId,
+                chat_list: chatList
+            };
+            
+            const request = objectStore.put(conversationData);
+            
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
+    // Thêm tin nhắn mới vào cuộc trò chuyện
+    async function addMessageToConversation(friendId, senderId, receiverId, messageData) {
+        
+        
+        try {
+            const db = await openChatDatabase();
+            
+            return new Promise(async (resolve, reject) => {
+                try {
+                    // Lấy cuộc trò chuyện hiện tại
+                    let conversation = await getConversation(friendId);
+                    
+                    // Nếu chưa có cuộc trò chuyện, tạo mới
+                    if (!conversation) {
+                        conversation = {
+                            friend_id: friendId,
+                            chat_list: []
                         };
-                        requestStr.onerror = () => reject(requestStr.error);
-                    } else {
-                        resolve(request.result);
                     }
-                };
-                
-                request.onerror = () => {
-                    console.error('❌ Request error:', request.error);
-                    reject(request.error);
-                };
-                
-                transaction.onerror = () => {
-                    console.error('❌ Transaction error:', transaction.error);
-                    reject(transaction.error);
-                };
-            });
-        }
-
-        // Lấy tất cả cuộc trò chuyện
-        async function getAllConversations() {
-            const db = await openChatDatabase();
-            
-            return new Promise((resolve, reject) => {
-                const transaction = db.transaction(['conversations'], 'readonly');
-                const objectStore = transaction.objectStore('conversations');
-                const request = objectStore.getAll();
-                
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = () => reject(request.error);
-            });
-        }
-        // Xóa cuộc trò chuyện với một friend
-        async function deleteConversation(friendId) {
-            const db = await openChatDatabase();
-            
-            return new Promise((resolve, reject) => {
-                const transaction = db.transaction(['conversations'], 'readwrite');
-                const objectStore = transaction.objectStore('conversations');
-                const request = objectStore.delete(friendId);
-                
-                request.onsuccess = () => resolve();
-                request.onerror = () => reject(request.error);
-            });
-        }
-        // xóa tất cả tin nhắn
-        async function deleteAllConversations() {
-            try {
-                // Lấy tất cả cuộc trò chuyện
-                const allConversations = await getAllConversations();
-                
-                // Xóa từng cuộc trò chuyện
-                const deletePromises = allConversations.map(conversation => 
-                    deleteConversation(conversation.friend_id)
-                );
-                
-                // Chờ tất cả hoàn thành
-                await Promise.all(deletePromises);
-                
-                return true;
-                
-            } catch (error) {
-                throw error;
-            }
-        }
-        // Lấy tin nhắn cuối cùng của mỗi cuộc trò chuyện (để hiển thị preview)
-        async function getLastMessages() {
-            const conversations = await getAllConversations();
-            
-            return conversations.map(conv => {
-                const lastMessage = conv.chat_list[conv.chat_list.length - 1];
-                return {
-                    friend_id: conv.friend_id,
-                    last_message: lastMessage,
-                    total_messages: conv.chat_list.length
-                };
-            });
-        }
-        // Tìm kiếm tin nhắn trong tất cả cuộc trò chuyện
-        async function searchMessages(searchTerm) {
-            const conversations = await getAllConversations();
-            const results = [];
-            
-            conversations.forEach(conv => {
-                conv.chat_list.forEach(message => {
-                    if (message.data.toLowerCase().includes(searchTerm.toLowerCase())) {
-                        results.push({
-                            friend_id: conv.friend_id,
-                            message: message
-                        });
-                    }
-                });
-            });
-            
-            return results;
-        }
-        // Contact selection
-        async function selectContact(element) {
-            document.querySelectorAll('.contact-item')
-                .forEach(e => e.classList.toggle('active', e === element));
-            
-            const friend_id = element.dataset.friend_id;
-            document.getElementById("send_receiver_id").value = friend_id;
-            
-            // Xóa các liên hệ cũ đã chọn
-            document.querySelectorAll('.contact-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            
-            // Thêm active liên hệ đã chọn
-            element.classList.add('active');
-            
-            // Thông báo tin nhắn đã đọc
-            const badge = element.querySelector('.unread-badge');
-            if (badge) {
-                badge.style.opacity = '0';
-                setTimeout(() => badge.remove(), 300);
-            }
-            
-            const container = document.querySelector('.chat-messages');
-            if (!container) return;
-            container.innerHTML = '';
-            
-            try {
-                // Thêm delay nhỏ để đảm bảo IndexedDB đã được cập nhật
-                await new Promise(resolve => setTimeout(resolve, 50));
-                
-                const conversation = await getConversation(friend_id);
-                
-                
-                if (conversation && conversation.chat_list) {
-                    const mainContent = document.querySelector('.chat-messages');
-                    conversation.chat_list.forEach(message => {
-                        const newDiv = document.createElement('div');
-                        if (message.sender_id == friend_id) {
-                            newDiv.className = 'message received';
-                            newDiv.textContent = message.data;
-                        } else {
-                            newDiv.className = 'message sent';
-                            newDiv.textContent = message.data;
-                        }
-                        mainContent.appendChild(newDiv);
-                    });
                     
-                    // Scroll xuống cuối
-                    mainContent.scrollTop = mainContent.scrollHeight;
+                    // Thêm tin nhắn mới
+                    const newMessage = {
+                        sender_id: senderId,
+                        receiver_id: receiverId,
+                        data: messageData,
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    conversation.chat_list.push(newMessage);
+                    
+                    // Lưu với transaction mới
+                    const transaction = db.transaction(['conversations'], 'readwrite');
+                    const objectStore = transaction.objectStore('conversations');
+                    const request = objectStore.put(conversation);
+                    
+                    // Đợi transaction hoàn thành hoàn toàn
+                    transaction.oncomplete = () => {
+                        resolve(newMessage);
+                    };
+                    
+                    transaction.onerror = (event) => {
+                        console.error('❌ Save transaction error:', event);
+                        reject(transaction.error);
+                    };
+                    
+                    request.onerror = (event) => {
+                        console.error('❌ Save request error:', event);
+                        reject(request.error);
+                    };
+                    
+                } catch (innerError) {
+                    console.error('❌ Inner error:', innerError);
+                    reject(innerError);
                 }
-            } catch (error) {
-                console.error('❌ Error loading conversation:', error);
-            }
-        }
-        
-
-
-        window.addEventListener('beforeunload', () => {
-                deleteAllConversations()
-            });
-        
-        // Add new contact
-        function addNewContact(receiver_id,name, avatar, status) {
-            const contactsList = document.getElementById('contactsList');
-            const newContact = document.createElement('div');
-            newContact.className = 'contact-item';
-            newContact.dataset.friend_id = receiver_id;
-            newContact.addEventListener('click', () => {
-                selectContact(newContact);
-            });
-
-            newContact.innerHTML = `
-                <img class="avatar" src="${avatar}"></img>
-                <div class="contact-info">
-                    <div class="contact-name">${name.trim()}</div>
-                <input type="hidden" id="receiver_id_${receiver_id}" value = "${receiver_id}">
-                </div>
-                <div class="contact-meta">
-                    <div class="contact-time">${status}</div>
-                    <div class="unread-badge">1</div>
-                </div>
-            `;
-
-            contactsList.insertBefore(newContact, contactsList.firstChild);
-
-            // thêm hiệu ứng cho contact
-            newContact.style.transform = 'translateX(-100%)';
-            newContact.style.opacity = '0';
-            setTimeout(() => {
-                newContact.style.transform = 'translateX(0)';
-                newContact.style.opacity = '1';
-                newContact.style.transition = 'all 0.3s ease';
-            }, 100);
-        }
-
-        // thêm hiệu ứng cho contact
-        document.querySelectorAll('.contact-item').forEach(item => {
-            item.addEventListener('mouseenter', function() {
-                this.style.transform = 'translateX(5px)';
             });
             
-            item.addEventListener('mouseleave', function() {
-                if (!this.classList.contains('active')) {
-                    this.style.transform = 'translateX(0)';
+        } catch (dbError) {
+            console.error('❌ Database error:', dbError);
+            throw dbError;
+        }
+    }
+    // Lấy cuộc trò chuyện với một friend
+    async function getConversation(friendId) {
+        const db = await openChatDatabase();
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction(['conversations'], 'readonly');
+            const objectStore = transaction.objectStore('conversations');
+            // Thử cả string và number
+            const friendIdStr = String(friendId);
+            const friendIdNum = Number(friendId);
+            const request = objectStore.get(friendId);
+            request.onsuccess = () => {
+                // Nếu không tìm thấy với friendId gốc, thử với string/number
+                if (!request.result) {
+        
+                    
+                    const requestStr = objectStore.get(friendIdStr);
+                    requestStr.onsuccess = () => {
+                        if (requestStr.result) {
+                            resolve(requestStr.result);
+                        } else {
+                            const requestNum = objectStore.get(friendIdNum);
+                            requestNum.onsuccess = () => {
+                                
+                                resolve(requestNum.result);
+                            };
+                            requestNum.onerror = () => reject(requestNum.error);
+                        }
+                    };
+                    requestStr.onerror = () => reject(requestStr.error);
+                } else {
+                    resolve(request.result);
+                }
+            };
+            
+            request.onerror = () => {
+                console.error('❌ Request error:', request.error);
+                reject(request.error);
+            };
+            
+            transaction.onerror = () => {
+                console.error('❌ Transaction error:', transaction.error);
+                reject(transaction.error);
+            };
+        });
+    }
+    // Lấy tất cả cuộc trò chuyện
+    async function getAllConversations() {
+        const db = await openChatDatabase();
+        
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction(['conversations'], 'readonly');
+            const objectStore = transaction.objectStore('conversations');
+            const request = objectStore.getAll();
+            
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
+    // Xóa cuộc trò chuyện với một friend
+    async function deleteConversation(friendId) {
+        const db = await openChatDatabase();
+        
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction(['conversations'], 'readwrite');
+            const objectStore = transaction.objectStore('conversations');
+            const request = objectStore.delete(friendId);
+            
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
+        });
+    }
+    // xóa tất cả tin nhắn
+    async function deleteAllConversations() {
+        try {
+            // Lấy tất cả cuộc trò chuyện
+            const allConversations = await getAllConversations();
+            
+            // Xóa từng cuộc trò chuyện
+            const deletePromises = allConversations.map(conversation => 
+                deleteConversation(conversation.friend_id)
+            );
+            
+            // Chờ tất cả hoàn thành
+            await Promise.all(deletePromises);
+            
+            return true;
+            
+        } catch (error) {
+            throw error;
+        }
+    }
+    // Lấy tin nhắn cuối cùng của mỗi cuộc trò chuyện (để hiển thị preview)
+    async function getLastMessages() {
+        const conversations = await getAllConversations();
+        
+        return conversations.map(conv => {
+            const lastMessage = conv.chat_list[conv.chat_list.length - 1];
+            return {
+                friend_id: conv.friend_id,
+                last_message: lastMessage,
+                total_messages: conv.chat_list.length
+            };
+        });
+    }
+    // Tìm kiếm tin nhắn trong tất cả cuộc trò chuyện
+    async function searchMessages(searchTerm) {
+        const conversations = await getAllConversations();
+        const results = [];
+        
+        conversations.forEach(conv => {
+            conv.chat_list.forEach(message => {
+                if (message.data.toLowerCase().includes(searchTerm.toLowerCase())) {
+                    results.push({
+                        friend_id: conv.friend_id,
+                        message: message
+                    });
                 }
             });
         });
+        
+        return results;
+    }
+    // Contact selection
+    async function selectContact(element) {
+        document.querySelectorAll('.contact-item')
+            .forEach(e => e.classList.toggle('active', e === element));
+        
+        const friend_id = element.dataset.friend_id;
+        document.getElementById("send_receiver_id").value = friend_id;
+        
+        // Xóa các liên hệ cũ đã chọn
+        document.querySelectorAll('.contact-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        
+        // Thêm active liên hệ đã chọn
+        element.classList.add('active');
+        
+        // Thông báo tin nhắn đã đọc
+        const badge = element.querySelector('.unread-badge');
+        if (badge) {
+            badge.style.opacity = '0';
+            setTimeout(() => badge.remove(), 300);
+        }
+        
+        const container = document.querySelector('.chat-messages');
+        if (!container) return;
+        container.innerHTML = '';
+        
+        try {
+            // Thêm delay nhỏ để đảm bảo IndexedDB đã được cập nhật
+            await new Promise(resolve => setTimeout(resolve, 50));
+            
+            const conversation = await getConversation(friend_id);
+            
+            
+            if (conversation && conversation.chat_list) {
+                const mainContent = document.querySelector('.chat-messages');
+                conversation.chat_list.forEach(message => {
+                    const newDiv = document.createElement('div');
+                    if (message.sender_id == friend_id) {
+                        newDiv.className = 'message received';
+                        newDiv.textContent = message.data;
+                    } else {
+                        newDiv.className = 'message sent';
+                        newDiv.textContent = message.data;
+                    }
+                    mainContent.appendChild(newDiv);
+                });
+                
+                // Scroll xuống cuối
+                mainContent.scrollTop = mainContent.scrollHeight;
+            }
+        } catch (error) {
+            console.error('❌ Error loading conversation:', error);
+        }
+    }
+    window.addEventListener('beforeunload', () => {
+            deleteAllConversations()
+        });
+        
+    // Add new contact
+    function addNewContact(receiver_id,name, avatar, status) {
+        const contactsList = document.getElementById('contactsList');
+        const newContact = document.createElement('div');
+        newContact.className = 'contact-item';
+        newContact.dataset.friend_id = receiver_id;
+        newContact.addEventListener('click', () => {
+            selectContact(newContact);
+        });
+
+        newContact.innerHTML = `
+            <img class="avatar" src="${avatar}"></img>
+            <div class="contact-info">
+                <div class="contact-name">${name.trim()}</div>
+            <input type="hidden" id="receiver_id_${receiver_id}" value = "${receiver_id}">
+            </div>
+            <div class="contact-meta">
+                <div class="contact-time">${status}</div>
+                <div class="unread-badge">1</div>
+            </div>
+        `;
+
+        contactsList.insertBefore(newContact, contactsList.firstChild);
+
+        // thêm hiệu ứng cho contact
+        newContact.style.transform = 'translateX(-100%)';
+        newContact.style.opacity = '0';
+        setTimeout(() => {
+            newContact.style.transform = 'translateX(0)';
+            newContact.style.opacity = '1';
+            newContact.style.transition = 'all 0.3s ease';
+        }, 100);
+    }
+
+    // thêm hiệu ứng cho contact
+    document.querySelectorAll('.contact-item').forEach(item => {
+        item.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateX(5px)';
+        });
+        
+        item.addEventListener('mouseleave', function() {
+            if (!this.classList.contains('active')) {
+                this.style.transform = 'translateX(0)';
+            }
+        });
+    });
 
 
 
     
     
     
-        // gửi tin nhắn bằng nút
+    // gui tin nhan
     function send_message(){
         message = document.getElementById("messageInput")
+        if(!message.value || message.value.trim() === "") {
+            return;
+        }
         send_receiver_id = document.getElementById("send_receiver_id").value
         sendMessage({
                 type: "message",
@@ -1134,7 +1245,7 @@
         
         message.value = "";
     }
-    // gửi tin nhắn bằng phím enter
+    //gui tin nhan bang phim enter
     document.getElementById("messageInput").addEventListener("keydown", function(e) {
         if (e.key === "Enter") {
             e.preventDefault();
@@ -1155,27 +1266,26 @@
             preview.innerHTML = '';
         }
     });
+
+
+    // ham them tin nhan vao ui
     function displayMessage(from, message, currentUserId) {
         const mainContent = document.querySelector('.chat-messages');
         if (!mainContent) return;
-        
         const newDiv = document.createElement('div');
-        
         if (from === currentUserId) {
             newDiv.className = 'message sent';
         } else {
             newDiv.className = 'message received';
         }
-        
         newDiv.textContent = message;
         mainContent.appendChild(newDiv);
-        
         // Scroll xuống cuối
         mainContent.scrollTop = mainContent.scrollHeight;
     }
 
     
-
+    //ham truoc khi load trang
     window.addEventListener('beforeunload', () => {
         if (connectionCheckInterval) {
             clearInterval(connectionCheckInterval);
@@ -1184,100 +1294,98 @@
         disconnectWebSocket();
     });
 
-// Hàm cập nhật ping indicator
-    function updatePingIndicator(lastPingTime) {
-    
-        let indicator = document.getElementById('pingIndicator');
-        if (getConnectionStatus() === "connected") {
-            document.getElementById('pingIndicator').innerHTML = `${lastPingTime}ms`;
-        }
+    // Hàm cập nhật ping indicator
+        function updatePingIndicator(lastPingTime) {
         
-    }
-
-    setInterval(() =>{
-        if (getConnectionStatus() != "connected") {
-                document.getElementById('pingIndicator').innerHTML = `đang kết nối`;
+            let indicator = document.getElementById('pingIndicator');
+            if (getConnectionStatus() === "connected") {
+                document.getElementById('pingIndicator').innerHTML = `${lastPingTime}ms`;
             }
-    },1500)
-    
-document.addEventListener('visibilitychange', () => {
-    isPageVisible = !document.hidden;
-    if (isPageVisible) {
-        checkAndReconnectIfNeeded();
-    }
-});
-
-function add_friends(){
-    
-
-}
-    document.getElementById('seachUsername').addEventListener('input', debounce(async e => {
-    try {
-        if(e.target.value.trim() === '') {
-            document.getElementById('friendList').innerHTML = ''; // Clear the list if input is empty
-            return;
+            
         }
-        const result = await API('http://127.0.0.1:8000/user/seachUsers/', {
-            username: e.target.value.trim()
-        });
+
+        setInterval(() =>{
+            if (getConnectionStatus() != "connected") {
+                    document.getElementById('pingIndicator').innerHTML = `đang kết nối`;
+                }
+        },1500)
         
-        if (result) {
-            const friendList = document.getElementById('friendList');
-            friendList.innerHTML = ''; // Clear previous results
-            console.log('Friend list:', result);
-    result.data.forEach(friend => {
-        console.log('Friend:', friend.avata, friend.username, friend.user_id);
-        const friendItem = document.createElement('div');
-        friendItem.className = 'friend-item';
-        friendItem.innerHTML = `
-            <img src="${friend.avata}" alt="Avatar" class="avatar" />
-            <span class="friend-name">${friend.username}</span>
-            <span class="add-friend" title="Add friend">+</span>
-        `;
-        friendList.appendChild(friendItem);
+    document.addEventListener('visibilitychange', () => {
+        isPageVisible = !document.hidden;
+        if (isPageVisible) {
+            checkAndReconnectIfNeeded();
+        }
     });
-}
 
-    }
-    catch (error) {
-        console.error('Search failed:', error);
-    }
-}));
-function debounce(fn, delay = 500) {
-  let timeout;
-  return (...args) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => fn.apply(this, args), delay);
-  };
-}
+    function add_friends(){}
+    // seach user
+    document.getElementById('seachUsername').addEventListener('input', debounce(async e => {
+        try {
+            if(e.target.value.trim() === '') {
+                document.getElementById('friendList').innerHTML = ''; // Clear the list if input is empty
+                return;
+            }
+            const result = await API('http://127.0.0.1:8000/user/seachUsers/', {
+                username: e.target.value.trim()
+            });
+            
+            if (result) {
+                const friendList = document.getElementById('friendList');
+                friendList.innerHTML = ''; // Clear previous results
+                console.log('Friend list:', result);
+                result.data.forEach(friend => {
+                    console.log('Friend:', friend.avata, friend.username, friend.user_id);
+                    const friendItem = document.createElement('div');
+                    friendItem.className = 'friend-item';
+                    friendItem.innerHTML = `
+                        <img src="${friend.avata}" alt="Avatar" class="avatar" />
+                        <span class="friend-name">${friend.username}</span>
+                        <span class="add-friend" title="Add friend" data-friend-id="${friend.user_id}">+</span>
+                    `;
+                    friendList.appendChild(friendItem);
+                });
+            }
 
-async function API(url, data) {
-  
-    
-    try {
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        });
-        
-       
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`HTTP ${response.status}: ${errorText}`);
         }
-        
-        const result = await response.json();
-        return result;
-        
-    } catch (error) {
-        console.error('API call failed:', error);
-        throw error;
+        catch (error) {
+            console.error('Search failed:', error);
+        }
+    }));
+    // Hàm kiem tra xem nguoi dung co dang nhap hay khong
+    function debounce(fn, delay = 500) {
+        let timeout;
+        return (...args) => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => fn.apply(this, args), delay);
+        };
     }
-}
-    function add_friends(){
+    // Hàm gọi API bang kieu POST
+    async function API(url, data) {
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+            
+        
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
+            }
+            
+            const result = await response.json();
+            return result;
+            
+        } catch (error) {
+            console.error('API call failed:', error);
+            throw error;
+        }
+    }
+    // ham de hien thi dong form them ban be
+    function openFriendForm() {
         const friendForm = document.getElementById('FriendForm');
         if (friendForm.style.display === 'none' || friendForm.style.display === '') {
             friendForm.style.display = 'flex';
@@ -1287,7 +1395,64 @@ async function API(url, data) {
             friendForm.style.display = 'none';
         }
     }
-
-    </script>
+    // ham de dong form them ban be
+    function closeFriendForm() {
+        const friendForm = document.getElementById('FriendForm');
+        friendForm.style.display = 'none';
+        document.body.classList.remove('blur-all');
+    }
+    // ham click de gui ket ban
+    document.addEventListener('click',async function(e) {
+        if (e.target.classList.contains('add-friend')) {
+            const user = getCookie('user');
+            const friend_id = e.target.dataset.friendId;
+            const result = await API('http://127.0.0.1:8000/friends/add_friend/',{ user_id: user.user_id,friend_id: friend_id })
+            if (result) {
+                if(result.isSuccess){
+                    console.log('Thêm bạn thành công:', result.message);
+                    sendMessage({
+                    type: "add_friend",
+                    friend_id: friend_id,
+                    "avata": user.avata,
+                    "username": user.username,
+                    timestamp: new Date().toISOString()
+                });
+                }
+                else if(result.isSuccess === false) {
+                    console.log('Thêm bạn thất bại:', result.reason);
+                }
+                else {
+                    console.error('Lỗi không xác định:', result);
+                }
+                
+            
+            } else {
+                // Xử lý lỗi nếu có
+                console.error('Lỗi khi thêm bạn:', result.message);
+            }
+            
+        }
+    });
+    // ham de hien thi danh sach thong bao
+    function notification(){
+        const notification = document.getElementById('notificationList');
+        
+        if (notification.style.display === 'none' || notification.style.display === '') {
+            notification.style.display = 'flex';
+            document.body.classList.add('blur-all');
+            console.log(notification.style.display)
+        } else {
+            notification.style.display = 'none';
+            document.body.classList.remove('blur-all');
+        }
+        
+    }
+    // ham de dong danh sach thong bao
+    function closeNotificationList(){
+        const notificationList = document.getElementById('notificationList');
+        notificationList.style.display = 'none';
+        document.body.classList.remove('blur-all');
+    }
+</script>
 </body>
 </html>

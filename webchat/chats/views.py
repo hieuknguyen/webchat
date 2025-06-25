@@ -1,12 +1,14 @@
 from django.shortcuts import render
-from friends.views import get_friends
+from friends.views import get_friends, get_friends_pending
 import requests
 import json
 from django.http import JsonResponse
 def chat(request):
+    
     friends_list = get_friends(request)
+    friends_list_pending = get_friends_pending(request)
     message = get_message(request,friends_list)
-    return render(request, 'index1.html', {'friends': friends_list, "message": message})
+    return render(request, 'index1.html', {'friends': friends_list,'friends_list_pending':friends_list_pending, "message": message})
 
 def get_message(request, friends_list):
     user_id =  int(json.loads(request.COOKIES.get('user')).get('user_id'))

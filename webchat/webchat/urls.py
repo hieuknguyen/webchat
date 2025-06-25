@@ -25,4 +25,5 @@ urlpatterns = [
     
     path('chat/', chats.chat, name='chat'),
     path('chat/', include('chats.urls')),
+    path('friends/', include('friends.urls')),
 ]

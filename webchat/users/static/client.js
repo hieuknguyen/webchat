@@ -8,6 +8,7 @@ let connectionCheckInterval = null;
 let isPageVisible = true;
 
 const WEBSOCKET_URL = "ws://103.200.23.126:9000";
+    
 const RECONNECT_DELAY = 3000;
 
 
@@ -52,6 +53,7 @@ function sendMessage(data) {
         if (data.type === 'ping') {
             pingStartTime = Date.now();
         }
+        
         
         websocket.send(JSON.stringify(data));
         return true;
