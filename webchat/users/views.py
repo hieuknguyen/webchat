@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 import json
 import requests
+from django.test import RequestFactory
+from django.http import HttpResponse
 def get_home(request):
     user = request.COOKIES.get('user')
     if user:
@@ -25,21 +27,23 @@ def register_form(request):
         username = request.POST.get("username")
         email = request.POST.get("email")
         password = request.POST.get("password")
-        
         api_url = "https://quackquack.io.vn/api/users/register.php"
-
+        
         try:
             response = requests.post(api_url, data={
                 "username": username,
                 "email": email,
                 "password": password
             })
-
-
             if response.status_code == 200:
                 data = response.json()
                 if data.get("isSuccess"):
-                    return render(request, 'register.html', {'message': 'User registered successfully!'})
+                    factory = RequestFactory()
+                    request = factory.post('/login/', data={
+                        'email': email,
+                        'password': password
+                    })
+                    return login_form(request)
                 else:
                     return render(request, 'register.html', {'error': data.get("reason", "Registration failed.")})
             else:
@@ -81,7 +85,7 @@ def logout(request):
 
 
 
-@csrf_exempt  # Tắt CSRF cho API (hoặc dùng CSRF token)
+@csrf_exempt  
 def seach_users(request):
     import json
     from django.http import JsonResponse

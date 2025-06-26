@@ -26,9 +26,9 @@ function logout() {
 }
 
 var lock = true;
-function hidden_show() {
+function hidden_show(index) {
     
-    var password = document.getElementById("input_password");
+    var password = document.getElementById(index);
     var icon = document.getElementById("locks");
     var icon1 = document.getElementById("show");
     if (password.value === "") {
