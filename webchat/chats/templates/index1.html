@@ -450,7 +450,7 @@
             </div>
             <div class="search-container">
                 <div class="search-box">
-                    <div class="search-icon">🔍</div>
+                    <ion-icon name="search-outline" class="search-icon"></ion-icon>
                     <input type="text" class="search-input" placeholder="Tìm kiếm..." id="searchInput">
                     <button class="add-btn" onclick="openFriendForm()">+</button>
                 </div>
@@ -823,15 +823,18 @@ position: relative;
             else if(data.type === "notification") {
                 const notificationLis = document.getElementById('notificationList');
                 const friendItem = document.createElement('div');
-                friendItem.className = 'friend-item';
+                friendItem.className = `friend-item friend-item-${data.friend}`;
 
                 friendItem.innerHTML = `
                     <img src="${data.avata}" alt="Avatar" class="avatar" />
                     <span class="friend-name">${data.username}</span>
-                    <ion-icon name="close-outline"></ion-icon>
-                    <ion-icon name="checkmark-outline" icon-accepted></ion-icon>
+                    <ion-icon name="close-outline" class="icon-cancel"></ion-icon>
+                    <ion-icon name="checkmark-outline" class="icon-accepted" onclick="accept_friend(${data.friend})" ></ion-icon>
                 `;
                 notificationLis.appendChild(friendItem);
+            }
+            else if(data.type === "accept_friend"){
+                console.log(data.friend);
             }
         } catch (error) {
             console.error('❌ Error processing received message:', error);
@@ -875,14 +878,19 @@ position: relative;
     friends_list_pending.forEach(friend => {
         const notificationLis = document.getElementById('notificationList');
         const friendItem = document.createElement('div');
-        friendItem.className = 'friend-item';
+        friendItem.className = `friend-item friend-item-${friend.user_id}`;
 
         friendItem.innerHTML = `
             <img src="${friend.avata}" alt="Avatar" class="avatar" />
             <span class="friend-name">${friend.username}</span>
             <ion-icon name="close-outline" class="icon-cancel"></ion-icon>
-            <ion-icon name="checkmark-outline" class="icon-accepted"></ion-icon>
+            <ion-icon name="checkmark-outline" class="icon-accepted" onclick="accept_friend(${friend.user_id})" ></ion-icon>
+            
         `;
+        friendItem.querySelector('.icon-cancel').addEventListener('click', function() {
+            deleteFriend(friend.user_id);
+            friendItem.remove();
+        });
         notificationLis.appendChild(friendItem);
 
     });
@@ -1336,7 +1344,7 @@ position: relative;
                 result.data.forEach(friend => {
                     console.log('Friend:', friend.avata, friend.username, friend.user_id);
                     const friendItem = document.createElement('div');
-                    friendItem.className = 'friend-item';
+                    friendItem.className = `friend-item friend-item-${friend.user_id}`;
                     friendItem.innerHTML = `
                         <img src="${friend.avata}" alt="Avatar" class="avatar" />
                         <span class="friend-name">${friend.username}</span>
@@ -1452,6 +1460,54 @@ position: relative;
         const notificationList = document.getElementById('notificationList');
         notificationList.style.display = 'none';
         document.body.classList.remove('blur-all');
+    }
+    // ham chap nhan ket ban
+    async function accept_friend(friend_id) {
+        const user = getCookie('user');
+        
+        const result = await API('http://127.0.0.1:8000/friends/accept_friend/',{ user_id: user.user_id,friend_id: friend_id })
+            if (result) {
+                if(result.isSuccess){
+                    console.log('Chấp nhận kết bạn thành công:', result.isSuccess);
+                    // Xóa thông báo kết bạn
+                    const friendItem = document.querySelector(`.friend-item-${friend_id}`);
+                    if (friendItem) {
+                        friendItem.remove();
+                    }
+                    const get_friend = await API('http://127.0.0.1:8000/friends/get_friends/',{
+                        user_id: user.user_id,
+                        friend_id: friend_id
+                    });
+                    if( get_friend && get_friend.isSuccess) {
+                        addNewContact(get_friend.inf.user_id, get_friend.inf.username, get_friend.inf.avata, get_friend.inf.status)
+                        (async ()=>{
+                            for (const message of get_friend.data) {
+                                await addMessageToConversation(get_friend.inf.user_id, message.sender_id, message.receiver_id, message.content);
+                                }
+                        })();
+                        
+                    }
+                    else {
+                        console.error('Lỗi khi thêm bạn:', get_friend.reason);
+                    }
+                    
+                }
+                else if(result.isSuccess === false) {
+                    console.log('Thêm bạn thất bại:', result.reason);
+                }
+                else {
+                    console.error('Lỗi không xác định:', result);
+                }
+                sendMessage({
+                    type: "accept_friend",
+                    friend_id: friend_id,
+                    timestamp: new Date().toISOString()
+                });
+            
+            } else {
+                // Xử lý lỗi nếu có
+                console.error('Lỗi khi thêm bạn:', result.message);
+            }
     }
 </script>
 </body>
