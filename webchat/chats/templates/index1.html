@@ -513,6 +513,7 @@ position: relative;
     .Notification{
         
         padding: 10px;
+        cursor: pointer;
     }
     .notification-dot {
   position: absolute;
@@ -834,7 +835,8 @@ position: relative;
                 notificationLis.appendChild(friendItem);
             }
             else if(data.type === "accept_friend"){
-                console.log(data.friend);
+                const user = getCookie('user');
+                await get_friends(user.user_id, data.friend)
             }
         } catch (error) {
             console.error('❌ Error processing received message:', error);
@@ -1218,7 +1220,7 @@ position: relative;
             newContact.style.transition = 'all 0.3s ease';
         }, 100);
     }
-
+    window.addNewContact = addNewContact;
     // thêm hiệu ứng cho contact
     document.querySelectorAll('.contact-item').forEach(item => {
         item.addEventListener('mouseenter', function() {
@@ -1461,6 +1463,29 @@ position: relative;
         notificationList.style.display = 'none';
         document.body.classList.remove('blur-all');
     }
+
+    //ham lay 1 nguoi ban va tin nhan
+    async function get_friends(user_id, friend_id) {
+        const get_friend = await API('http://127.0.0.1:8000/friends/get_friends/',{
+            user_id: user_id,
+            friend_id: friend_id
+        });
+        if( get_friend && get_friend.isSuccess) {
+            addNewContact(get_friend.inf.user_id, get_friend.inf.username, get_friend.inf.avata, get_friend.inf.status);
+            (async ()=>{
+                for (const message of get_friend.data) {
+                    await addMessageToConversation(get_friend.inf.user_id, message.sender_id, message.receiver_id, message.content);
+                    }
+            })();
+            
+        }
+        else {
+            console.error('Lỗi khi thêm bạn:', get_friend.reason);
+        }
+
+
+    }
+
     // ham chap nhan ket ban
     async function accept_friend(friend_id) {
         const user = getCookie('user');
@@ -1474,22 +1499,9 @@ position: relative;
                     if (friendItem) {
                         friendItem.remove();
                     }
-                    const get_friend = await API('http://127.0.0.1:8000/friends/get_friends/',{
-                        user_id: user.user_id,
-                        friend_id: friend_id
-                    });
-                    if( get_friend && get_friend.isSuccess) {
-                        addNewContact(get_friend.inf.user_id, get_friend.inf.username, get_friend.inf.avata, get_friend.inf.status)
-                        (async ()=>{
-                            for (const message of get_friend.data) {
-                                await addMessageToConversation(get_friend.inf.user_id, message.sender_id, message.receiver_id, message.content);
-                                }
-                        })();
-                        
-                    }
-                    else {
-                        console.error('Lỗi khi thêm bạn:', get_friend.reason);
-                    }
+                    get_friends(user.user_id, friend_id);
+                    
+                    
                     
                 }
                 else if(result.isSuccess === false) {
