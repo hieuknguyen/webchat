@@ -1,0 +1,614 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Thông tin cá nhân</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #fce7f3 0%, #f3e8ff 50%, #dbeafe 100%); 
+            overflow: hidden;
+            margin: 0 !important;
+        }
+        .profile-container {
+            position: relative;
+            max-width: 400px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 32px 24px;
+        }
+        .avatar-container {
+            width: 100px;
+            height: 100px;
+            position: relative;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-bottom: 20px;
+        }
+        .avatar {
+            width: 100px; height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 16px auto;
+            display: block;
+            border: 2px solid #eee;
+        }
+        .add-icon {
+            position: absolute;
+            background: #ffffff;
+            bottom: 0; right: 0;
+            font-size: 24px;
+            color: #007bff;
+            cursor: pointer;
+            border-radius: 50%;
+            padding: 2px;
+        }
+        h2 { text-align: center; margin-bottom: 8px; }
+        ul { list-style: none; padding: 0; }
+        li { margin-bottom: 10px; }
+        .label { font-weight: bold; }
+        
+        #cropContainer {
+            position: absolute;
+            z-index: 1;
+            width: 300px;
+            height: 300px;
+            overflow: hidden;
+            {% comment %} margin: 20px auto; {% endcomment %}
+            border-radius: 50%;
+            border: 2px solid #000;
+            background: rgba(0, 0, 0, 0.1);
+            left: 50%;
+            bottom: 50%;
+            transform: translateY(-50%);
+            transform: translateX(-50%);
+            display: none;
+        }
+
+        #imageToCrop {
+            position: absolute;
+            max-width: none;
+            max-height: none;
+            width: auto;
+            height: auto;
+            min-width: 100%; /* Ensure initial fill */
+            min-height: 100%; /* Ensure initial fill */
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            transform-origin: 0 0; /* Important for consistent scaling */
+        }
+
+        #cropContainer button {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        #cropContainer button:hover {
+            background: #0056b3;
+        }
+
+        #croppedCanvas {
+            width: 100px;
+            height: 100px;
+            display: none;
+            margin: 10px auto;
+            border: 1px solid #ddd;
+            border-radius: 50%;
+        }
+
+        .crop-controls {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .crop-controls button {
+            margin: 5px;
+            padding: 8px 16px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .crop-controls button:hover {
+            background: #5a6268;
+        }
+        .aaa {
+            position: absolute;
+            right: 50%;
+            transform: translateX(50%);
+            display: flex;
+            gap: 20px; /* khoảng cách giữa các nút */
+            justify-content: center;
+            align-items: center;
+        }
+
+        .aaa button {
+            border: none;
+            width: 120px;
+            height: 36px;
+            cursor: pointer;
+            font-size: 1.2em;
+            font-weight: 500;
+            font-family: 'Poppins', 'sans-serif';
+            border-radius: 6px;
+            transition: background 0.3s;
+            background: linear-gradient(45deg, #ec4899, #8b5cf6);
+        }
+
+        .aaa button:hover {
+           transform: translateY(-2px);
+        }
+
+        #username{
+            padding: 0px 20px 0px 0px;
+            
+        }
+        .edit-icon{
+            cursor: pointer;
+            
+        }
+        .form-changePass{
+            display: flex;
+            flex-direction: column;
+            
+        }
+        .form-changePass div {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+
+        .form-changePass label {
+            width: 180px; /* hoặc tùy chỉnh theo độ dài label dài nhất */
+            font-weight: 500;
+        }
+
+        .form-changePass input {
+            flex: 1; /* giúp input tự động chiếm phần còn lại */
+            padding: 6px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            min-width: 200px;
+            box-sizing: border-box;
+        }
+
+    </style>
+    <link rel="stylesheet" href="{% static 'background.css' %}">
+    <script src="{% static 'cookie.js' %}"></script>
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+</head>
+<body>
+    <div class="bg-decoration"></div>
+    <div class="bg-decoration"></div>
+    <div class="bg-decoration"></div>
+    <div class="profile-container" id="profileContainer">
+        <div class="avatar-container">
+            <img src="" alt="Avatar" class="avatar" id="avatarDisplay">
+            <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="loadImage(event)">
+            <canvas id="croppedCanvas"></canvas>
+            <div class="add-icon" onclick="triggerFileInput()">+</div>
+        </div>
+        
+        <h2>Hồ sơ người dùng</h2>
+        <ul>
+            <li style="display:flex; align-items:center; gap: 5px;"><span class="label label-username"  >Tên người dùng:</span> <p id="username"></p> <ion-icon name="create-outline" class="edit-icon" onclick="editUsername()"></ion-icon> </li>
+            <li style="display:flex; align-items:center; gap: 5px;"><span class="label" >Email:</span> <p id="email"></p> </li>
+        </ul>
+        <div class = "form-changePass">
+        </div>
+        
+        <div class="aaa">
+            <button class="changePass-bnt" onclick="changePass()">Đổi mật khẩu</button>
+            <button class="logout-bnt" onclick="window.location.href='{% url 'logout' %}'">Đăng xuất</button>
+        </div>
+        
+
+
+        
+        <div class="crop-controls">
+            <button onclick="resetImage()" style="display: none;" id="resetBtn">Reset</button>
+            
+        </div>
+        
+        
+       
+    </div>
+    <div id="cropContainer">
+            <img id="imageToCrop" src="" />
+            <button onclick="cropImage()">Cắt ảnh</button>
+        </div>
+
+    <script>
+    function triggerFileInput() {
+        document.getElementById("imageInput").click();
+        document.getElementById('profileContainer').style.display = 'none';
+    }
+    const user = getCookie('user');
+    
+    document.getElementById("avatarDisplay").src = user.avatar;
+    document.getElementById("username").innerHTML = user.username;
+    document.getElementById("email").innerHTML = user.email;
+    async function API(url, data) {
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+            
+        
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
+            }
+            
+            const result = await response.json();
+            return result;
+            
+        } catch (error) {
+            console.error('API call failed:', error);
+            throw error;
+        }
+    }
+    
+
+        let isDragging = false;
+        let startX, startY;
+        let offsetX = 0, offsetY = 0;
+        let scale = 1;
+        let currentImage = null; // Stores the actual Image object
+
+        function loadImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentImage = new Image(); // Create a new Image object
+                currentImage.onload = function() {
+                    const img = document.getElementById("imageToCrop");
+                    img.src = e.target.result;
+                    
+                    // Reset values
+                    offsetX = 0;
+                    offsetY = 0;
+                    scale = 1;
+                    
+                    // Show crop container and controls
+                    document.getElementById("cropContainer").style.display = "block";
+                    document.getElementById("resetBtn").style.display = "inline-block";
+                    
+                    // Set initial position and scale
+                    img.style.left = "0px";
+                    img.style.top = "0px";
+                    img.style.transform = "scale(1)";
+                    img.style.cursor = "grab";
+                    
+                    // Add event listeners
+                    setupImageEvents();
+
+                    // Adjust initial scale to fit or fill the container
+                    const containerSize = 300;
+                    const imgNaturalWidth = currentImage.naturalWidth;
+                    const imgNaturalHeight = currentImage.naturalHeight;
+
+                    const widthRatio = containerSize / imgNaturalWidth;
+                    const heightRatio = containerSize / imgNaturalHeight;
+
+                    // Choose the larger ratio to ensure the container is filled
+                    scale = Math.max(widthRatio, heightRatio);
+
+                    // Calculate initial offsets to center the image
+                    offsetX = (containerSize - imgNaturalWidth * scale) / 2;
+                    offsetY = (containerSize - imgNaturalHeight * scale) / 2;
+
+                    img.style.transform = `scale(${scale})`;
+                    img.style.left = offsetX + "px";
+                    img.style.top = offsetY + "px";
+                    document.getElementById("croppedCanvas").style.display = "none";
+                  
+                 
+                };
+                currentImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function setupImageEvents() {
+            const img = document.getElementById("imageToCrop");
+            const container = document.getElementById("cropContainer");
+            
+            // Mouse events for dragging
+            img.onmousedown = function(e) {
+                e.preventDefault();
+                isDragging = true;
+                startX = e.clientX - offsetX;
+                startY = e.clientY - offsetY;
+                img.style.cursor = "grabbing";
+                
+                document.addEventListener('mousemove', handleMouseMove);
+                document.addEventListener('mouseup', handleMouseUp);
+            };
+            
+            // Wheel event for zooming
+            container.addEventListener('wheel', handleWheel, { passive: false });
+        }
+
+        function handleMouseMove(e) {
+            if (!isDragging) return;
+            
+            offsetX = e.clientX - startX;
+            offsetY = e.clientY - startY;
+            
+            const img = document.getElementById("imageToCrop");
+            img.style.left = offsetX + "px";
+            img.style.top = offsetY + "px";
+        }
+
+        function handleMouseUp() {
+            if (!isDragging) return;
+            
+            isDragging = false;
+            const img = document.getElementById("imageToCrop");
+            img.style.cursor = "grab";
+            
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+        }
+
+        function handleWheel(e) {
+            e.preventDefault();
+            
+            const img = document.getElementById("imageToCrop");
+            const container = document.getElementById("cropContainer");
+            
+            // Get mouse position relative to container
+            const rect = container.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            // Calculate zoom
+            const zoomIntensity = 0.1;
+            const wheel = e.deltaY < 0 ? 1 : -1;
+            const zoom = Math.exp(wheel * zoomIntensity);
+            
+            // Limit scale between 0.5 and 3
+            const newScale = Math.min(Math.max(scale * zoom, 0.5), 3);
+            
+            if (newScale !== scale) {
+                // Calculate new position to zoom towards mouse
+                const scaleRatio = newScale / scale;
+                
+                offsetX = mouseX - (mouseX - offsetX) * scaleRatio;
+                offsetY = mouseY - (mouseY - offsetY) * scaleRatio;
+                
+                scale = newScale;
+                img.style.transform = `scale(${scale})`;
+                img.style.left = offsetX + "px";
+                img.style.top = offsetY + "px";
+            }
+        }
+
+        async function cropImage() {
+            if (!currentImage) return;
+            const canvas = document.getElementById("croppedCanvas");
+            const ctx = canvas.getContext("2d");
+            const containerSize = 300;
+            const outputSize = containerSize;
+            canvas.width = outputSize;
+            canvas.height = outputSize;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(outputSize / 2, outputSize / 2, outputSize / 2, 0, Math.PI * 2);
+            ctx.clip();
+            const sourceX = (-offsetX / scale);
+            const sourceY = (-offsetY / scale);
+            const sourceWidth = containerSize / scale;
+            const sourceHeight = containerSize / scale;
+            ctx.drawImage(
+                currentImage,
+                sourceX,
+                sourceY,
+                sourceWidth,
+                sourceHeight,
+                0,
+                0,
+                outputSize, 
+                outputSize 
+            );
+            ctx.restore();
+            if (!canvas.getContext) {
+                console.error("Trình duyệt không hỗ trợ Canvas 2D.");
+                return;
+            }
+            const imageDataURL = canvas.toDataURL('image/png', 1.0);
+            const imgElement = document.getElementById('avatarDisplay');
+            const update_avatar =  await API('http://127.0.0.1:8000/user/update_avatar/', { avatar: imageDataURL, user_id: user.user_id });
+            if (update_avatar.isSuccess === true) {
+                imgElement.src = update_avatar.imageUrl;
+                updateCookieField("user", "avatar", update_avatar.imageUrl);
+                document.getElementById("resetBtn").style.display = "none"; 
+            } else {
+                console.error("Cập nhật ảnh không thành công:", update_avatar.reason);
+            }
+            document.getElementById("cropContainer").style.display = "none";
+            document.getElementById('profileContainer').style.display = 'block'; // Show profile container after cropping
+        }
+
+        function resetImage() {
+            const img = document.getElementById("imageToCrop");
+            if (!currentImage) return; // Use currentImage instead of img.src
+
+            const containerSize = 300;
+            const imgNaturalWidth = currentImage.naturalWidth;
+            const imgNaturalHeight = currentImage.naturalHeight;
+
+            const widthRatio = containerSize / imgNaturalWidth;
+            const heightRatio = containerSize / imgNaturalHeight;
+
+            scale = Math.max(widthRatio, heightRatio);
+            offsetX = (containerSize - imgNaturalWidth * scale) / 2;
+            offsetY = (containerSize - imgNaturalHeight * scale) / 2;
+            
+            img.style.left = offsetX + "px";
+            img.style.top = offsetY + "px";
+            img.style.transform = `scale(${scale})`;
+            
+            // Hide canvas and controls
+            document.getElementById("croppedCanvas").style.display = "none";
+            console.log("Ảnh đã được reset");
+        }
+
+        
+
+
+    
+
+    </script>
+    <script>
+        async function editUsername() {
+    const username = document.getElementById("username");
+    const labelUsername = document.querySelector('.label-username');
+
+    // Kiểm tra đã có input chưa => nếu có rồi thì không cho tạo thêm
+    if (labelUsername.querySelector('.usernameInput')) {
+        return;
+    }
+
+    const usernameInput = document.createElement('input');
+    usernameInput.className = "usernameInput";
+    usernameInput.value = username.textContent;
+    labelUsername.appendChild(usernameInput);
+    username.style.display = 'none';
+
+    usernameInput.focus(); // Tự động focus vào input
+
+    usernameInput.addEventListener('keypress', async function(event) {
+        if (event.key === 'Enter') {
+            if (usernameInput.value === '') return;
+
+            const updateName = await API('http://127.0.0.1:8000/user/update_username/', {
+                user_id: user.user_id,
+                username: usernameInput.value
+            });
+
+            if (updateName && updateName.isSuccess === true) {
+                console.log(updateName.isSuccess)
+                updateCookieField("user", "username", usernameInput.value);
+                username.innerHTML = usernameInput.value;
+            }
+
+            // Xóa ô input và hiển thị lại username
+            usernameInput.remove();
+            username.style.display = 'flex';
+        }
+    });
+}
+
+        function changePass(){
+            const formChangePass = document.querySelector('.form-changePass');
+            
+            if (formChangePass.querySelector('.btn-confirm-change')) {
+                return;
+            }
+            const formCheckPass = document.createElement('div');
+            formCheckPass.className = 'form-check-pass';
+            formCheckPass.innerHTML = '<label for="checkPass" class="label-checkPass">Nhập mật khẩu hiện tại: </label> <input type="password" id="checkPass" name="checkPass" >'
+            formChangePass.appendChild(formCheckPass);
+
+            // Mật khẩu mới
+            
+            const formNewPass = document.createElement('div');
+            formNewPass.className = 'form-new-pass';
+            formNewPass.innerHTML = '<label for="newPass" class="label-newPass">Nhập mật khẩu mới: </label> <input type="password" id="newPass" name="newPass" >'
+            formChangePass.appendChild(formNewPass);
+
+            // Xác nhận mật khẩu
+            const formConfirmPass = document.createElement('div');
+            formConfirmPass.className = 'form-new-pass';
+            formConfirmPass.innerHTML = '<label for="confirmPass" class="label-confirmPass">Xác nhận khẩu mới: </label> <input type="password" id="confirmPass" name="confirmPass" >'
+            formChangePass.appendChild(formConfirmPass);
+
+            const submitBtn = document.createElement('button');
+            submitBtn.type = 'submit';
+            submitBtn.textContent = 'Xác nhận';
+            submitBtn.className = 'btn-confirm-change';
+            submitBtn.addEventListener('click', () => {
+                update_pass()
+            });
+            checkPass = document.getElementById('checkPass')
+            checkPass.addEventListener('change', () => {
+                if(checkPass.value != ''){
+                    checkPass.style.border = '1px solid #ccc'
+            }
+            });
+            formChangePass.style.padding ="0px 0px 20px 0px"
+            formChangePass.appendChild(submitBtn);
+
+        }
+        
+        async function update_pass(){
+            checkPass = document.getElementById('checkPass')
+            newPass = document.getElementById('newPass')
+            confirmPass = document.getElementById('confirmPass')
+
+
+            if(checkPass.value === ''){
+               
+                checkPass.style.border = '1px solid rgb(255, 0, 0)'
+            }
+            if(newPass.value === ''){
+               
+                newPass.style.border = '1px solid rgb(255, 0, 0)'
+            }
+            if(confirmPass.value === ''){
+                
+                confirmPass.style.border = '1px solid rgb(255, 0, 0)'
+            }
+            if(checkPass.value != '' && newPass.value != '' & confirmPass.value != ''){
+                const api_checkPass= await API('http://127.0.0.1:8000/user/check_pass/',{
+                    email: user.email,
+                    password: checkPass.value
+                });
+                if(api_checkPass && api_checkPass.isSuccess === true){
+                    
+                    const api_updatePass = await API('http://127.0.0.1:8000/user/update_pass/',{
+                        email: user.email,
+                        password: newPass.value
+                    });
+                    console.log(api_updatePass)
+                    /*if(api_updatePass && api_updatePass.isSuccess === true){
+                        
+                    }*/
+                }
+                    
+                
+            }
+            
+        }
+        
+        
+    </script>
+</body>
+</html>

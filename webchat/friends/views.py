@@ -3,9 +3,10 @@ import requests
 import json
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
+import urllib.parse
 # Create your views here.
 def get_all_friends(request):
-    user_id =  int(json.loads(request.COOKIES.get('user')).get('user_id'))
+    user_id =   json.loads(urllib.parse.unquote(request.COOKIES.get('user'))).get("user_id")
     api_url = "https://quackquack.io.vn/api/friends/get_all_friends.php"
     friends = []
     try:
@@ -107,7 +108,7 @@ def add_friend(request):
     
     
 def get_friends_pending(request):
-    user_id =  int(json.loads(request.COOKIES.get('user')).get('user_id'))
+    user_id =   json.loads(urllib.parse.unquote(request.COOKIES.get('user'))).get("user_id")
     api_url = "https://quackquack.io.vn/api/friends/get_friend_pending.php"
     friends = []
     

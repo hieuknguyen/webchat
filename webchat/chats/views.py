@@ -3,15 +3,19 @@ from friends.views import get_all_friends, get_friends_pending
 import requests
 import json
 from django.http import JsonResponse
+from django.http import HttpResponse
+import urllib.parse
 def chat(request):
-    
+  
+   
     friends_list = get_all_friends(request)
     friends_list_pending = get_friends_pending(request)
     message = get_message(request,friends_list)
-    return render(request, 'index1.html', {'friends': friends_list,'friends_list_pending':friends_list_pending, "message": message})
+    
+    return render(request, 'chat.html', {'friends': friends_list,'friends_list_pending':friends_list_pending, "message": message})
 
 def get_message(request, friends_list):
-    user_id =  int(json.loads(request.COOKIES.get('user')).get('user_id'))
+    user_id = json.loads(urllib.parse.unquote(request.COOKIES.get('user'))).get("user_id")
     print("="*100)
     data1 = []
     for i in friends_list:

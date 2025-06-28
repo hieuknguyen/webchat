@@ -441,12 +441,13 @@
         <div class="sidebar">
             
             <div style="display: flex;justify-content: flex-end;">
-            <div class="aaa" onclick="notification()">
+            <div class="notification" onclick="notification()">
                 <span class="notification-dot"></span>
-                <ion-icon name="notifications-outline" class="Notification"</ion-icon>
+                <ion-icon name="notifications-outline" class="Notification-icon"</ion-icon>
             </div>
-            <ion-icon name="person-outline" style="padding:10px"></ion-icon>
-
+            <a href="{% url 'profile' %}" class="profile" style="padding:10px">
+                <ion-icon name="person-outline" ></ion-icon>
+            </a>
             </div>
             <div class="search-container">
                 <div class="search-box">
@@ -486,7 +487,7 @@
         
             <div id="friendList">
                 <div class="friend-item">
-                    <img src="https://quackquack.io.vn/api/users/avata/a.png" alt="Avatar" class="avatar" />
+                    <img src="https://quackquack.io.vn/api/users/avatar/a.png" alt="Avatar" class="avatar" />
                     <span class="friend-name">Nguyễn Trung Hiếu</span>
                     <span class="add-friend" title="Add friend">+</span>
                 </div>
@@ -498,19 +499,21 @@
             <ion-icon onclick="close_login()" name="close"></ion-icon>
         </span>
         <h2 class="title">Thông Báo</h2>
-
     </div>
+
+    
 </body>
     
 
 
 
 <style>
-    .aaa{
+    .notification{
 position: relative;
+font-size: 20px;
 
     }
-    .Notification{
+    .Notification-icon{
         
         padding: 10px;
         cursor: pointer;
@@ -562,6 +565,13 @@ position: relative;
     #notificationList, #notificationList *{
         filter: none !important;
     }
+
+    .profile{
+        color: black;
+        cursor: pointer;
+        font-size: 20px;
+    }
+
     #FriendForm , #FriendForm  * {
             filter: none !important;
         }
@@ -827,7 +837,7 @@ position: relative;
                 friendItem.className = `friend-item friend-item-${data.friend}`;
 
                 friendItem.innerHTML = `
-                    <img src="${data.avata}" alt="Avatar" class="avatar" />
+                    <img src="${data.avatar}" alt="Avatar" class="avatar" />
                     <span class="friend-name">${data.username}</span>
                     <ion-icon name="close-outline" class="icon-cancel"></ion-icon>
                     <ion-icon name="checkmark-outline" class="icon-accepted" onclick="accept_friend(${data.friend})" ></ion-icon>
@@ -873,7 +883,7 @@ position: relative;
     
 
     friends.forEach(friend => {
-        addNewContact(friend.user_id,friend.username, friend.avata, friend.status);
+        addNewContact(friend.user_id,friend.username, friend.avatar, friend.status);
     });
     
 
@@ -883,7 +893,7 @@ position: relative;
         friendItem.className = `friend-item friend-item-${friend.user_id}`;
 
         friendItem.innerHTML = `
-            <img src="${friend.avata}" alt="Avatar" class="avatar" />
+            <img src="${friend.avatar}" alt="Avatar" class="avatar" />
             <span class="friend-name">${friend.username}</span>
             <ion-icon name="close-outline" class="icon-cancel"></ion-icon>
             <ion-icon name="checkmark-outline" class="icon-accepted" onclick="accept_friend(${friend.user_id})" ></ion-icon>
@@ -903,7 +913,7 @@ position: relative;
         const contacts = document.querySelectorAll('.contact-item');
         let result = friends.filter(friend => friend.username.toLowerCase().includes(searchTerm));
         document.querySelectorAll('.contact-item').forEach(el => el.remove());
-        result.forEach(friend => {addNewContact(friend.user_id,friend.username, friend.avata, friend.status);});
+        result.forEach(friend => {addNewContact(friend.user_id,friend.username, friend.avatar, friend.status);});
     })
     function openChatDatabase() {
         return new Promise((resolve, reject) => {
@@ -1344,11 +1354,11 @@ position: relative;
                 friendList.innerHTML = ''; // Clear previous results
                 console.log('Friend list:', result);
                 result.data.forEach(friend => {
-                    console.log('Friend:', friend.avata, friend.username, friend.user_id);
+                    console.log('Friend:', friend.avatar, friend.username, friend.user_id);
                     const friendItem = document.createElement('div');
                     friendItem.className = `friend-item friend-item-${friend.user_id}`;
                     friendItem.innerHTML = `
-                        <img src="${friend.avata}" alt="Avatar" class="avatar" />
+                        <img src="${friend.avatar}" alt="Avatar" class="avatar" />
                         <span class="friend-name">${friend.username}</span>
                         <span class="add-friend" title="Add friend" data-friend-id="${friend.user_id}">+</span>
                     `;
@@ -1423,7 +1433,7 @@ position: relative;
                     sendMessage({
                     type: "add_friend",
                     friend_id: friend_id,
-                    "avata": user.avata,
+                    "avatar": user.avatar,
                     "username": user.username,
                     timestamp: new Date().toISOString()
                 });
@@ -1471,7 +1481,7 @@ position: relative;
             friend_id: friend_id
         });
         if( get_friend && get_friend.isSuccess) {
-            addNewContact(get_friend.inf.user_id, get_friend.inf.username, get_friend.inf.avata, get_friend.inf.status);
+            addNewContact(get_friend.inf.user_id, get_friend.inf.username, get_friend.inf.avatar, get_friend.inf.status);
             (async ()=>{
                 for (const message of get_friend.data) {
                     await addMessageToConversation(get_friend.inf.user_id, message.sender_id, message.receiver_id, message.content);
