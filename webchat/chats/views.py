@@ -5,6 +5,8 @@ import json
 from django.http import JsonResponse
 from django.http import HttpResponse
 import urllib.parse
+from django.views.decorators.csrf import csrf_exempt
+
 def chat(request):
   
    
@@ -34,4 +36,31 @@ def get_message(request, friends_list):
         except requests.exceptions.RequestException as e:
             pass 
     return data1
+
+
+
+@csrf_exempt
+def send_audio(request):
+    if request.method == 'POST':
+        audio = request.FILES.get('audio')
+        if audio:
+            api_url = "https://quackquack.io.vn/api/chats/send_audio.php"
+            try:
+                # Đúng cú pháp gửi file với multipart/form-data
+                files = {'audio': (audio.name, audio.file, audio.content_type)}
+                response = requests.post(api_url, files=files)
+
+                if response.status_code == 200:
+                    data = response.json()
+                    if data.get("isSuccess"):
+                        return JsonResponse({"isSuccess": True, "data": data.get("file")})
+                    else:
+                        return JsonResponse({"isSuccess": False, "reason": data.get("reason")})
+                else:
+                    return JsonResponse({"isSuccess": False, "reason": "API upload failed"})
+            except requests.exceptions.RequestException as e:
+                return JsonResponse({"isSuccess": False, "reason": "Connection error"})
+
+        return JsonResponse({"isSuccess": False, "reason": "No audio file found"})
     
+    return JsonResponse({"isSuccess": False, "reason": "Invalid method"})

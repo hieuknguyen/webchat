@@ -6,4 +6,5 @@ urlpatterns = [
     path('add_friend/', views.add_friend, name='add_friend'),
     path('accept_friend/', views.accept_friend, name='accept_friend'),
     
+    
 ]

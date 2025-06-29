@@ -165,3 +165,7 @@ def accept_friend(request):
             'error': 'Invalid JSON data'
         }, status=400)
     
+    
+    
+
+    

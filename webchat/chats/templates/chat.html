@@ -10,19 +10,24 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            overflow: hidden;
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            height: 100vh;
+             min-height: 100vh;
+            background: linear-gradient(135deg, #fce7f3 0%, #f3e8ff 50%, #dbeafe 100%);
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 0px !important;
+            position: relative;
+            overflow: hidden;
+            margin: 0 !important;
         }
         .blur-all > :not(#FriendForm ):not(#notificationList) {
             filter: blur(30px);
+            
         }
         
         #pingIndicator{
@@ -44,8 +49,8 @@
         .chat-container {
             display: flex;
             width: 100%;
-            max-width: 1200px;
-            height: 700px;
+            max-width: 1500px;
+            height: 800px;
             background: white;
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
@@ -201,7 +206,6 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            max-width: 800px;
             margin: 0 auto;
             width: 100%;
             position: relative;
@@ -296,6 +300,7 @@
             padding: 20px;
             overflow-y: auto;
             padding-bottom: 100px;
+            background: rgb(255, 255, 255)
         }
 
         .message {
@@ -423,16 +428,29 @@
                 padding: 10px 16px;
                 font-size: 14px;
             }
+            
         }
 
         /* Animation khi focus vào input */
         .message-form:focus-within {
             box-shadow: 0 -4px 20px rgba(0,123,255,0.15);
         }
+        .recordBtn-icon{
+            width:30px;
+            height:30px;
+            cursor:pointer;
+        }
+        .recordBtn-icon:active{
+            color: rgba(0, 44, 176, 1)
+        }
     </style>
+    <link rel="stylesheet" href="{% static 'background.css' %}">
 </head>
 
 <body>
+    <div class="bg-decoration"></div>
+    <div class="bg-decoration"></div>
+    <div class="bg-decoration"></div>
     {{ friends|json_script:"friends-data" }}
     {{ message|json_script:"messages-data" }}
     {{ friends_list_pending|json_script:"friends_list_pending-data" }}
@@ -466,10 +484,12 @@
         </div>
             <div id="imagePreview"></div>
             <div id="chatForm" class="message-form">
-                <label for="imageInput" class="icon-button" title="Chọn ảnh">📷</label>
-                <input type="file" id="imageInput" name="image" accept="image/*" class="file-input">
+                <label for="imageInput" class="icon-button" title="Chọn ảnh"><ion-icon name="folder-outline"></ion-icon></label>
+                <input type="file" id="imageInput" name="image" accept="*/*" class="file-input" multiple>
                 <input type="text" id="messageInput" name="content" class="message-input" placeholder="Nhập tin nhắn…" autocomplete="off">
                 <input type="hidden" id="send_receiver_id">
+                <ion-icon name="mic-outline" id="recordBtn-icon" class="recordBtn-icon" style=""></ion-icon>
+                {% comment %} <audio id="audioPlayer" controls></audio> {% endcomment %}
                 <button type="submit" class="send-button" onclick="send_message()">Gửi</button>
             </div>
         </div>
@@ -508,6 +528,7 @@
 
 
 <style>
+    
     .notification{
 position: relative;
 font-size: 20px;
@@ -542,6 +563,8 @@ font-size: 20px;
         box-sizing: border-box;
         border-radius: 8px;
         color: black;
+        box-shadow: 10px 10px 100px rgba(5, 0, 104,0.3),
+                    -10px -10px 100px  rgba(3, 229, 120, 0.3);
         
     }
     #notificationList {
@@ -559,6 +582,8 @@ font-size: 20px;
         box-sizing: border-box;
         border-radius: 8px;
         color: black;
+        box-shadow: 10px 10px 100px rgba(5, 0, 104,0.3),
+                    -10px -10px 100px  rgba(3, 229, 120, 0.3);
         
     }
 
@@ -784,9 +809,11 @@ font-size: 20px;
             lastActivity = Date.now();
             
             if (data.type === "message") {
+                
                 const from = String(data.from);
                 const to = String(data.to);
                 const message = String(data.message);
+                const typeMessage = data.type_message
                 
                 // Kiểm tra dữ liệu hợp lệ
                 if (!from || !to || !message) {
@@ -804,6 +831,7 @@ font-size: 20px;
                         friendId = to;
                         senderId = from;
                         receiverId = to;
+                        
                     } else {
                         // Tin nhắn nhận được
                         friendId = from;
@@ -819,7 +847,8 @@ font-size: 20px;
                         // Chỉ hiển thị UI nếu đang xem cuộc trò chuyện này
                         const activeContact = document.querySelector('.contact-item.active');
                         if (activeContact && activeContact.dataset.friend_id === friendId) {
-                            displayMessage(from, message, user.user_id);
+
+                            displayMessage(typeMessage,from, message, user.user_id);
                         }
                         
                     } catch (saveError) {
@@ -1256,13 +1285,15 @@ font-size: 20px;
             return;
         }
         send_receiver_id = document.getElementById("send_receiver_id").value
+        if(send_receiver_id){
         sendMessage({
                 type: "message",
+                typeMessage : "text",
                 to: send_receiver_id,
                 message: message.value?.trim(),
                 timestamp: new Date().toISOString()
             });
-        
+        }
         message.value = "";
     }
     //gui tin nhan bang phim enter
@@ -1289,17 +1320,69 @@ font-size: 20px;
 
 
     // ham them tin nhan vao ui
-    function displayMessage(from, message, currentUserId) {
+    function displayMessage(typeMessage,from, message, currentUserId) {
+        console.log(typeMessage)
         const mainContent = document.querySelector('.chat-messages');
         if (!mainContent) return;
-        const newDiv = document.createElement('div');
-        if (from === currentUserId) {
-            newDiv.className = 'message sent';
-        } else {
-            newDiv.className = 'message received';
+        if(typeMessage === "text"){
+            const newDiv = document.createElement('div');
+            if (from === currentUserId) {
+                newDiv.className = 'message sent';
+            } else {
+                newDiv.className = 'message received';
+            }
+            newDiv.textContent = message;
+            mainContent.appendChild(newDiv);
         }
-        newDiv.textContent = message;
-        mainContent.appendChild(newDiv);
+       else if (typeMessage === "audio") {
+            const mediaWrapper = document.createElement('div');
+            mediaWrapper.className = from === currentUserId ? 'message sent' : 'message received';
+
+            const videoElem = document.createElement('video');
+            videoElem.controls = true;
+            videoElem.style.width = '250px';
+            videoElem.style.borderRadius = '8px'; // Added for consistent styling
+
+            const sourceElem = document.createElement('source');
+            sourceElem.src = message;
+            sourceElem.type = 'video/webm'; // Changed type to video/webm as per user's request
+
+            videoElem.appendChild(sourceElem);
+            mediaWrapper.appendChild(videoElem);
+            mainContent.appendChild(mediaWrapper);
+
+            // Important: Load the video element explicitly
+            videoElem.load();
+
+            // Add event listeners for debugging (optional but recommended)
+            videoElem.onloadedmetadata = () => console.log('Video metadata loaded for:', message);
+            videoElem.oncanplay = () => console.log('Video can play for:', message);
+            videoElem.onerror = (e) => {
+                console.error('Error loading video:', message, e);
+                if (videoElem.error) {
+                    switch (videoElem.error.code) {
+                        case videoElem.error.MEDIA_ERR_ABORTED:
+                            console.error('Video fetch aborted.');
+                            break;
+                        case videoElem.error.MEDIA_ERR_NETWORK:
+                            console.error('Video network error.');
+                            break;
+                        case videoElem.error.MEDIA_ERR_DECODE:
+                            console.error('Video decode error.');
+                            break;
+                        case videoElem.error.MEDIA_ERR_SRC_NOT_SUPPORTED:
+                            console.error('Video source not supported.');
+                            break;
+                        default:
+                            console.error('An unknown video error occurred.');
+                            break;
+                    }
+                }
+            };
+        }
+
+
+        
         // Scroll xuống cuối
         mainContent.scrollTop = mainContent.scrollHeight;
     }
@@ -1404,6 +1487,27 @@ font-size: 20px;
             throw error;
         }
     }
+    async function APIWithFile(url, formData) {
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                body: formData 
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
+            }
+
+            const result = await response.json();
+            return result;
+
+        } catch (error) {
+            console.error('API with file failed:', error);
+            throw error;
+        }
+    }
+
     // ham de hien thi dong form them ban be
     function openFriendForm() {
         const friendForm = document.getElementById('FriendForm');
@@ -1431,12 +1535,12 @@ font-size: 20px;
                 if(result.isSuccess){
                     console.log('Thêm bạn thành công:', result.message);
                     sendMessage({
-                    type: "add_friend",
-                    friend_id: friend_id,
-                    "avatar": user.avatar,
-                    "username": user.username,
-                    timestamp: new Date().toISOString()
-                });
+                        type: "add_friend",
+                        friend_id: friend_id,
+                        "avatar": user.avatar,
+                        "username": user.username,
+                        timestamp: new Date().toISOString()
+                    });
                 }
                 else if(result.isSuccess === false) {
                     console.log('Thêm bạn thất bại:', result.reason);
@@ -1522,6 +1626,7 @@ font-size: 20px;
                 }
                 sendMessage({
                     type: "accept_friend",
+                    
                     friend_id: friend_id,
                     timestamp: new Date().toISOString()
                 });
@@ -1531,6 +1636,65 @@ font-size: 20px;
                 console.error('Lỗi khi thêm bạn:', result.message);
             }
     }
+</script>
+<script>
+let mediaRecorder;
+let audioChunks = [];
+
+const recordBtn = document.getElementById('recordBtn-icon');
+const audioPlayer = document.getElementById('audioPlayer');
+
+// Khi người dùng nhấn giữ chuột
+recordBtn.addEventListener('mousedown', async () => {
+    if (!navigator.mediaDevices) {
+        alert("Trình duyệt không hỗ trợ ghi âm!");
+        return;
+    }
+
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+
+    mediaRecorder.ondataavailable = event => {
+        audioChunks.push(event.data);
+    };
+
+    mediaRecorder.onstop = async() => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        //audioPlayer.src = audioUrl;
+        const formData = new FormData();
+        formData.append('audio', audioBlob);
+        const api_audio = await APIWithFile('http://127.0.0.1:8000/chat/send_audio/',formData)
+        console.log("https://quackquack.io.vn/api/chats/"+ api_audio.data)
+        send_receiver_id = document.getElementById("send_receiver_id").value
+        console.log(send_receiver_id)
+        if(send_receiver_id){
+            const file_audio = "https://quackquack.io.vn/api/chats/" + api_audio.data
+            console.log(send_receiver_id)
+            console.log(file_audio)
+           sendMessage({
+            type: "message",
+            typeMessage : "audio",
+            to: send_receiver_id,
+            message: file_audio,
+            timestamp: new Date().toISOString()
+        }); 
+        }
+        
+        
+
+        audioChunks = [];
+    };
+
+    mediaRecorder.start();
+});
+
+// Khi người dùng thả chuột
+recordBtn.addEventListener('mouseup', () => {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+    }
+});
 </script>
 </body>
 </html>
