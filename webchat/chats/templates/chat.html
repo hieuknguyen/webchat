@@ -1,0 +1,1700 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+             min-height: 100vh;
+            background: linear-gradient(135deg, #fce7f3 0%, #f3e8ff 50%, #dbeafe 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0px !important;
+            position: relative;
+            overflow: hidden;
+            margin: 0 !important;
+        }
+        .blur-all > :not(#FriendForm ):not(#notificationList) {
+            filter: blur(30px);
+            
+        }
+        
+        #pingIndicator{
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            z-index: 9999;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            user-select: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .chat-container {
+            display: flex;
+            width: 100%;
+            max-width: 1500px;
+            height: 800px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 380px;
+            background: #f8f9fa;
+            border-right: 1px solid #e9ecef;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .search-container {
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 40px 12px 40px;
+            border: 1px solid #dee2e6;
+            border-radius: 25px;
+            font-size: 14px;
+            background: white;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            border-color: #c084fc;
+            box-shadow: 0 0 0 3px rgba(192, 132, 252, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+            font-size: 16px;
+        }
+
+        .add-btn {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #c084fc, #a855f7);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-50%) scale(1.1);
+            box-shadow: 0 5px 15px rgba(168, 85, 247, 0.3);
+        }
+
+        .contacts-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 1px solid rgba(233, 236, 239, 0.5);
+            position: relative;
+        }
+
+        .contact-item:hover {
+            background: #f1f3f4;
+            transform: translateX(5px);
+        }
+
+        .contact-item.active {
+            background: linear-gradient(135deg, #e0e7ff, #f3e8ff);
+            border-left: 4px solid #a855f7;
+        }
+
+        .avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 18px;
+            color: white;
+            margin-right: 15px;
+            position: relative;
+        }
+
+       
+
+        .contact-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .contact-name {
+            font-weight: 600;
+            font-size: 15px;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        .contact-meta {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+        }
+
+        .contact-time {
+            font-size: 12px;
+            color: #9ca3af;
+            white-space: nowrap;
+        }
+
+        .unread-badge {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            margin: 0 auto;
+            width: 100%;
+            position: relative;
+        }
+
+        .floating-action {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #1f2937, #111827);
+            border-radius: 50%;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .floating-action:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .chat-container {
+                flex-direction: column;
+                height: 100vh;
+                border-radius: 0;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: 60%;
+            }
+            
+            .main-content {
+                height: 40%;
+            }
+        }
+
+        /* Custom scrollbar */
+        .contacts-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .contacts-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .contacts-list::-webkit-scrollbar-thumb {
+            background: #c084fc;
+            border-radius: 3px;
+        }
+
+        .contacts-list::-webkit-scrollbar-thumb:hover {
+            background: #a855f7;
+        }
+
+        /* Smooth animations */
+        .contact-item {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        .message-form {
+        padding: 10px;
+        border-top: 1px solid #ccc;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            padding-bottom: 100px;
+            background: rgb(255, 255, 255)
+        }
+
+        .message {
+            background: white;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            border-radius: 18px;
+            max-width: 70%;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            display: inline-block;
+            word-wrap: break-word;
+            clear: both; /* Đảm bảo tin nhắn không ngang hàng */
+        }
+
+        .message.sent {
+            background: #007bff;
+            color: white;
+            float: right; /* Căn phải */
+        }
+
+        .message.received {
+            background: white;
+            float: left; /* Căn trái */
+        }
+
+        /* Clearfix để tránh layout bị vỡ */
+        .chat-messages::after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+
+        /* Form cố định dưới cùng */
+        .message-form {
+            position: Absolute;
+            bottom: 0;
+            
+            width:100%;
+        
+            
+            gap: 10px;
+            
+            z-index: 1000;
+        }
+
+        
+
+        .file-input {
+            display: none;
+        }
+
+        .icon-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: #f0f0f0;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background-color 0.2s;
+            user-select: none;
+        }
+
+        .icon-button:hover {
+            background: #e0e0e0;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 12px 16px;
+            border-radius: 25px;
+            outline: none;
+            font-size: 16px;
+            
+            transition: border-color 0.2s, background-color 0.2s;
+            border: none;
+        }
+
+        .message-input:focus {
+            border-color: #007bff;
+            
+        }
+
+        .send-button {
+            padding: 12px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+            min-width: 60px;
+        }
+
+        .send-button:hover {
+            background: #0056b3;
+        }
+
+        .send-button:active {
+            transform: translateY(1px);
+        }
+
+        /* Responsive cho mobile */
+        @media (max-width: 767px) {
+            .message-form {
+                padding: 10px 15px;
+            }
+            
+            .icon-button {
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+            }
+            
+            .message-input {
+                padding: 10px 14px;
+                font-size: 16px; /* Ngăn zoom trên iOS */
+            }
+            
+            .send-button {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+            
+        }
+
+        /* Animation khi focus vào input */
+        .message-form:focus-within {
+            box-shadow: 0 -4px 20px rgba(0,123,255,0.15);
+        }
+        .recordBtn-icon{
+            width:30px;
+            height:30px;
+            cursor:pointer;
+        }
+        .recordBtn-icon:active{
+            color: rgba(0, 44, 176, 1)
+        }
+    </style>
+    <link rel="stylesheet" href="{% static 'background.css' %}">
+</head>
+
+<body>
+    <div class="bg-decoration"></div>
+    <div class="bg-decoration"></div>
+    <div class="bg-decoration"></div>
+    {{ friends|json_script:"friends-data" }}
+    {{ message|json_script:"messages-data" }}
+    {{ friends_list_pending|json_script:"friends_list_pending-data" }}
+    <div id="pingIndicator"></div>
+    <div class="chat-container">
+        <div class="sidebar">
+            
+            <div style="display: flex;justify-content: flex-end;">
+            <div class="notification" onclick="notification()">
+                <span class="notification-dot"></span>
+                <ion-icon name="notifications-outline" class="Notification-icon"</ion-icon>
+            </div>
+            <a href="{% url 'profile' %}" class="profile" style="padding:10px">
+                <ion-icon name="person-outline" ></ion-icon>
+            </a>
+            </div>
+            <div class="search-container">
+                <div class="search-box">
+                    <ion-icon name="search-outline" class="search-icon"></ion-icon>
+                    <input type="text" class="search-input" placeholder="Tìm kiếm..." id="searchInput">
+                    <button class="add-btn" onclick="openFriendForm()">+</button>
+                </div>
+            </div>
+            <div class="contacts-list" id="contactsList"></div>
+        </div>
+        
+        <div class="main-content">
+        <!-- Khu vực tin nhắn -->
+        <div class="chat-messages">
+            
+        </div>
+            <div id="imagePreview"></div>
+            <div id="chatForm" class="message-form">
+                <label for="imageInput" class="icon-button" title="Chọn ảnh"><ion-icon name="folder-outline"></ion-icon></label>
+                <input type="file" id="imageInput" name="image" accept="*/*" class="file-input" multiple>
+                <input type="text" id="messageInput" name="content" class="message-input" placeholder="Nhập tin nhắn…" autocomplete="off">
+                <input type="hidden" id="send_receiver_id">
+                <ion-icon name="mic-outline" id="recordBtn-icon" class="recordBtn-icon" style=""></ion-icon>
+                {% comment %} <audio id="audioPlayer" controls></audio> {% endcomment %}
+                <button type="submit" class="send-button" onclick="send_message()">Gửi</button>
+            </div>
+        </div>
+    </div>
+    <div id="FriendForm" style="display: none;">
+        <span onclick="closeFriendForm()" class="icon-close">
+                <ion-icon onclick="close_login()" name="close"></ion-icon>
+        </span>
+        <h2 class="title">Thêm bạn bè</h2>
+        <form id="searchUser">
+            <input type="text" id="seachUsername" placeholder="Nhập tên người dùng" required>
+        </form>
+        <div id="add_friends">
+        
+        
+            <div id="friendList">
+                <div class="friend-item">
+                    <img src="https://quackquack.io.vn/api/users/avatar/a.png" alt="Avatar" class="avatar" />
+                    <span class="friend-name">Nguyễn Trung Hiếu</span>
+                    <span class="add-friend" title="Add friend">+</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="notificationList" style="display: none;" >
+        <span onclick="closeNotificationList()" class="icon-close">
+            <ion-icon onclick="close_login()" name="close"></ion-icon>
+        </span>
+        <h2 class="title">Thông Báo</h2>
+    </div>
+
+    
+</body>
+    
+
+
+
+<style>
+    
+    .notification{
+position: relative;
+font-size: 20px;
+
+    }
+    .Notification-icon{
+        
+        padding: 10px;
+        cursor: pointer;
+    }
+    .notification-dot {
+  position: absolute;
+  top: 11px;
+  right: 12px;
+  width: 5px;
+  height: 5px;
+  background: red;
+  border-radius: 50%;
+ z-index: 2000; /* Đảm bảo nó nằm trên cùng */
+}
+    #FriendForm {
+        position: absolute;
+        background:white;
+        width: 600px;
+        height: 700px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1001;
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+        box-sizing: border-box;
+        border-radius: 8px;
+        color: black;
+        box-shadow: 10px 10px 100px rgba(5, 0, 104,0.3),
+                    -10px -10px 100px  rgba(3, 229, 120, 0.3);
+        
+    }
+    #notificationList {
+        position: absolute;
+        background:white;
+        width: 600px;
+        height: 700px;
+        left: 50%;
+        
+        transform: translateX(-50%);
+        z-index: 1001;
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+        box-sizing: border-box;
+        border-radius: 8px;
+        color: black;
+        box-shadow: 10px 10px 100px rgba(5, 0, 104,0.3),
+                    -10px -10px 100px  rgba(3, 229, 120, 0.3);
+        
+    }
+
+    #notificationList, #notificationList *{
+        filter: none !important;
+    }
+
+    .profile{
+        color: black;
+        cursor: pointer;
+        font-size: 20px;
+    }
+
+    #FriendForm , #FriendForm  * {
+            filter: none !important;
+        }
+
+    .title {
+        margin: 0 0 15px 0;
+        flex: 0 0 auto;
+        text-align: center;
+    }
+
+    #searchUser {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex: 0 0 auto;
+        color: black;
+    }
+    #searchUser input[type="text"] {
+        height: 50px;
+        border: 1px solid black;
+        font-size: 18px;
+    }
+    #seachUsername {
+        flex: 1;
+        height: 40px;
+        padding: 0 10px;
+        border: none;
+        border-radius: 4px;
+        font-size: 14px;
+        outline: none;
+    }
+
+    
+
+    #searchUser button:hover {
+        background: #45a049;
+    }
+
+    #add_friends {
+        flex: 1; /* Chiếm toàn bộ không gian còn lại */
+        display: flex;
+        flex-direction: column;
+        min-height: 0; /* Quan trọng cho flexbox scroll */
+    }
+
+    #friendList {
+        flex: 1;
+        overflow-y: auto;
+        box-sizing: border-box;
+        border-radius: 4px;
+        padding: 10px;
+    }
+
+    .friend-item {
+        display: flex;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.9);
+        margin-bottom: 10px;
+        padding: 12px;
+        border-radius: 6px;
+        color: black;
+        gap: 12px;
+        box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .friend-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        flex: 0 0 auto;
+    }
+
+    .friend-name {
+        flex: 1;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .add-friend {
+        font-size: 24px;
+        font-weight: 700;
+        cursor: pointer;
+        user-select: none;
+        transition: transform .15s;
+        color: #4CAF50;
+        flex: 0 0 auto;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: rgba(76, 175, 80, 0.1);
+    }
+
+    .add-friend:hover {
+        transform: scale(1.2);
+        background: rgba(76, 175, 80, 0.2);
+    }
+
+    /* Custom scrollbar */
+    #friendList::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    #friendList::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+    }
+
+    #friendList::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 3px;
+    }
+
+    #friendList::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.5);
+    }
+
+    /* Button để test thêm bạn */
+    .test-btn {
+        margin-top: 20px;
+        padding: 10px 20px;
+        background: #2196F3;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .test-btn:hover {
+        background: #1976D2;
+    }
+    .icon-close{
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 45px;
+    height: 45px;
+    background: #162938;
+    font-size: 2em;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-bottom-left-radius: 20px;
+    cursor: pointer;
+    z-index: 1;
+}
+    .icon-accepted, .icon-cancel{
+        font-size: 2em;
+    }
+    
+    .icon-accepted:hover{
+        color:rgb(76, 175, 80);
+        background: rgba(76, 175, 80, 0.1);
+        border-radius: 50%;
+        cursor: pointer;
+    }
+    .icon-cancel:hover{
+        color:rgb(244, 67, 54);
+        background: rgba(244, 67, 54, 0.1);
+        border-radius: 50%;
+        cursor: pointer;
+    }
+</style>    
+<script src="{% static 'cookie.js' %}"></script>
+<script src="{% static 'client.js' %}"></script>
+<script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+<script >
+
+    (async function initialize() {
+        const user = getCookie('user');
+        if (user && user.user_id) {
+            try {
+                user_id = parseInt(user.user_id); // Set global user_id
+                connectWebSocket(user_id);
+                //startHeartbeat();
+                
+                // Enhanced cleanup
+                window.addEventListener('beforeunload', () => {
+                    if (connectionCheckInterval) {
+                        clearInterval(connectionCheckInterval);
+                    }
+                    disconnectWebSocket();
+                });
+                
+                
+            } catch (error) {
+                console.error("Error during WebSocket initialization:", error);
+            }
+        } else {
+            console.log("Không tìm thấy user_id để kết nối WebSocket");
+        }
+    })();
+
+    async function received_message(event) {
+        try {
+            const data = JSON.parse(event.data);
+            
+            // Update last activity
+            lastActivity = Date.now();
+            
+            if (data.type === "message") {
+                
+                const from = String(data.from);
+                const to = String(data.to);
+                const message = String(data.message);
+                const typeMessage = data.type_message
+                
+                // Kiểm tra dữ liệu hợp lệ
+                if (!from || !to || !message) {
+                    
+                    return;
+                }
+                
+            
+                const user = getCookie('user');
+                if (user && user.user_id) {
+                    let friendId, senderId, receiverId;
+                    
+                    if (from === user.user_id) {
+                        // Tin nhắn gửi đi
+                        friendId = to;
+                        senderId = from;
+                        receiverId = to;
+                        
+                    } else {
+                        // Tin nhắn nhận được
+                        friendId = from;
+                        senderId = from;
+                        receiverId = to;
+                    }
+                    
+                    try {
+                        // Lưu vào IndexedDB trước
+                        await addMessageToConversation(friendId, senderId, receiverId, message);
+                     
+                        
+                        // Chỉ hiển thị UI nếu đang xem cuộc trò chuyện này
+                        const activeContact = document.querySelector('.contact-item.active');
+                        if (activeContact && activeContact.dataset.friend_id === friendId) {
+
+                            displayMessage(typeMessage,from, message, user.user_id);
+                        }
+                        
+                    } catch (saveError) {
+                        console.error('❌ Error saving message:', saveError);
+                    }
+                }
+            }
+            else if (data.type === "pong") {
+                lastPingTime = Date.now() - pingStartTime
+                updatePingIndicator(lastPingTime)
+            }
+            else if(data.type === "notification") {
+                const notificationLis = document.getElementById('notificationList');
+                const friendItem = document.createElement('div');
+                friendItem.className = `friend-item friend-item-${data.friend}`;
+
+                friendItem.innerHTML = `
+                    <img src="${data.avatar}" alt="Avatar" class="avatar" />
+                    <span class="friend-name">${data.username}</span>
+                    <ion-icon name="close-outline" class="icon-cancel"></ion-icon>
+                    <ion-icon name="checkmark-outline" class="icon-accepted" onclick="accept_friend(${data.friend})" ></ion-icon>
+                `;
+                notificationLis.appendChild(friendItem);
+            }
+            else if(data.type === "accept_friend"){
+                const user = getCookie('user');
+                await get_friends(user.user_id, data.friend)
+            }
+        } catch (error) {
+            console.error('❌ Error processing received message:', error);
+        }
+    }
+
+
+   websocket.onmessage = function(event) {
+    received_message(event);  
+    handleMessage(event);    
+};
+    const friends = JSON.parse(
+            document.getElementById("friends-data").textContent
+        );
+    document.getElementById("friends-data").remove();
+    const friends_list_pending = JSON.parse(
+            document.getElementById("friends_list_pending-data").textContent
+        );
+    document.getElementById("friends_list_pending-data").remove();
+    const messages = JSON.parse(
+            document.getElementById("messages-data").textContent
+        );
+    document.getElementById("messages-data").remove();
+
+    (async ()=>{
+        for (const message of messages) {
+                const friend_id = message.friend_id;
+                for (const chat of message.chat_list) {
+                    await addMessageToConversation(friend_id, chat.sender_id, chat.receiver_id, chat.content);
+                }
+            }
+    })();
+
+    
+
+    friends.forEach(friend => {
+        addNewContact(friend.user_id,friend.username, friend.avatar, friend.status);
+    });
+    
+
+    friends_list_pending.forEach(friend => {
+        const notificationLis = document.getElementById('notificationList');
+        const friendItem = document.createElement('div');
+        friendItem.className = `friend-item friend-item-${friend.user_id}`;
+
+        friendItem.innerHTML = `
+            <img src="${friend.avatar}" alt="Avatar" class="avatar" />
+            <span class="friend-name">${friend.username}</span>
+            <ion-icon name="close-outline" class="icon-cancel"></ion-icon>
+            <ion-icon name="checkmark-outline" class="icon-accepted" onclick="accept_friend(${friend.user_id})" ></ion-icon>
+            
+        `;
+        friendItem.querySelector('.icon-cancel').addEventListener('click', function() {
+            deleteFriend(friend.user_id);
+            friendItem.remove();
+        });
+        notificationLis.appendChild(friendItem);
+
+    });
+
+    // Search friends
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const contacts = document.querySelectorAll('.contact-item');
+        let result = friends.filter(friend => friend.username.toLowerCase().includes(searchTerm));
+        document.querySelectorAll('.contact-item').forEach(el => el.remove());
+        result.forEach(friend => {addNewContact(friend.user_id,friend.username, friend.avatar, friend.status);});
+    })
+    function openChatDatabase() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open('ChatDatabase', 1);
+            
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => resolve(request.result);
+            
+            // Tạo object store khi database được tạo lần đầu
+            request.onupgradeneeded = (event) => {
+                const db = event.target.result;
+                
+                // Tạo object store cho conversations
+                const conversationStore = db.createObjectStore('conversations', { 
+                    keyPath: 'friend_id' // friend_id làm khóa chính
+                });
+                
+                // Tạo index để tìm kiếm nhanh
+                conversationStore.createIndex('friend_id', 'friend_id', { unique: true });
+            };
+        });
+    }
+    // Thêm hoặc cập nhật cuộc trò chuyện với một friend
+    async function saveConversation(friendId, chatList) {
+        const db = await openChatDatabase();
+        
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction(['conversations'], 'readwrite');
+            const objectStore = transaction.objectStore('conversations');
+            
+            const conversationData = {
+                friend_id: friendId,
+                chat_list: chatList
+            };
+            
+            const request = objectStore.put(conversationData);
+            
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
+    // Thêm tin nhắn mới vào cuộc trò chuyện
+    async function addMessageToConversation(friendId, senderId, receiverId, messageData) {
+        
+        
+        try {
+            const db = await openChatDatabase();
+            
+            return new Promise(async (resolve, reject) => {
+                try {
+                    // Lấy cuộc trò chuyện hiện tại
+                    let conversation = await getConversation(friendId);
+                    
+                    // Nếu chưa có cuộc trò chuyện, tạo mới
+                    if (!conversation) {
+                        conversation = {
+                            friend_id: friendId,
+                            chat_list: []
+                        };
+                    }
+                    
+                    // Thêm tin nhắn mới
+                    const newMessage = {
+                        sender_id: senderId,
+                        receiver_id: receiverId,
+                        data: messageData,
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    conversation.chat_list.push(newMessage);
+                    
+                    // Lưu với transaction mới
+                    const transaction = db.transaction(['conversations'], 'readwrite');
+                    const objectStore = transaction.objectStore('conversations');
+                    const request = objectStore.put(conversation);
+                    
+                    // Đợi transaction hoàn thành hoàn toàn
+                    transaction.oncomplete = () => {
+                        resolve(newMessage);
+                    };
+                    
+                    transaction.onerror = (event) => {
+                        console.error('❌ Save transaction error:', event);
+                        reject(transaction.error);
+                    };
+                    
+                    request.onerror = (event) => {
+                        console.error('❌ Save request error:', event);
+                        reject(request.error);
+                    };
+                    
+                } catch (innerError) {
+                    console.error('❌ Inner error:', innerError);
+                    reject(innerError);
+                }
+            });
+            
+        } catch (dbError) {
+            console.error('❌ Database error:', dbError);
+            throw dbError;
+        }
+    }
+    // Lấy cuộc trò chuyện với một friend
+    async function getConversation(friendId) {
+        const db = await openChatDatabase();
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction(['conversations'], 'readonly');
+            const objectStore = transaction.objectStore('conversations');
+            // Thử cả string và number
+            const friendIdStr = String(friendId);
+            const friendIdNum = Number(friendId);
+            const request = objectStore.get(friendId);
+            request.onsuccess = () => {
+                // Nếu không tìm thấy với friendId gốc, thử với string/number
+                if (!request.result) {
+        
+                    
+                    const requestStr = objectStore.get(friendIdStr);
+                    requestStr.onsuccess = () => {
+                        if (requestStr.result) {
+                            resolve(requestStr.result);
+                        } else {
+                            const requestNum = objectStore.get(friendIdNum);
+                            requestNum.onsuccess = () => {
+                                
+                                resolve(requestNum.result);
+                            };
+                            requestNum.onerror = () => reject(requestNum.error);
+                        }
+                    };
+                    requestStr.onerror = () => reject(requestStr.error);
+                } else {
+                    resolve(request.result);
+                }
+            };
+            
+            request.onerror = () => {
+                console.error('❌ Request error:', request.error);
+                reject(request.error);
+            };
+            
+            transaction.onerror = () => {
+                console.error('❌ Transaction error:', transaction.error);
+                reject(transaction.error);
+            };
+        });
+    }
+    // Lấy tất cả cuộc trò chuyện
+    async function getAllConversations() {
+        const db = await openChatDatabase();
+        
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction(['conversations'], 'readonly');
+            const objectStore = transaction.objectStore('conversations');
+            const request = objectStore.getAll();
+            
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
+    // Xóa cuộc trò chuyện với một friend
+    async function deleteConversation(friendId) {
+        const db = await openChatDatabase();
+        
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction(['conversations'], 'readwrite');
+            const objectStore = transaction.objectStore('conversations');
+            const request = objectStore.delete(friendId);
+            
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
+        });
+    }
+    // xóa tất cả tin nhắn
+    async function deleteAllConversations() {
+        try {
+            // Lấy tất cả cuộc trò chuyện
+            const allConversations = await getAllConversations();
+            
+            // Xóa từng cuộc trò chuyện
+            const deletePromises = allConversations.map(conversation => 
+                deleteConversation(conversation.friend_id)
+            );
+            
+            // Chờ tất cả hoàn thành
+            await Promise.all(deletePromises);
+            
+            return true;
+            
+        } catch (error) {
+            throw error;
+        }
+    }
+    // Lấy tin nhắn cuối cùng của mỗi cuộc trò chuyện (để hiển thị preview)
+    async function getLastMessages() {
+        const conversations = await getAllConversations();
+        
+        return conversations.map(conv => {
+            const lastMessage = conv.chat_list[conv.chat_list.length - 1];
+            return {
+                friend_id: conv.friend_id,
+                last_message: lastMessage,
+                total_messages: conv.chat_list.length
+            };
+        });
+    }
+    // Tìm kiếm tin nhắn trong tất cả cuộc trò chuyện
+    async function searchMessages(searchTerm) {
+        const conversations = await getAllConversations();
+        const results = [];
+        
+        conversations.forEach(conv => {
+            conv.chat_list.forEach(message => {
+                if (message.data.toLowerCase().includes(searchTerm.toLowerCase())) {
+                    results.push({
+                        friend_id: conv.friend_id,
+                        message: message
+                    });
+                }
+            });
+        });
+        
+        return results;
+    }
+    // Contact selection
+    async function selectContact(element) {
+        document.querySelectorAll('.contact-item')
+            .forEach(e => e.classList.toggle('active', e === element));
+        
+        const friend_id = element.dataset.friend_id;
+        document.getElementById("send_receiver_id").value = friend_id;
+        
+        // Xóa các liên hệ cũ đã chọn
+        document.querySelectorAll('.contact-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        
+        // Thêm active liên hệ đã chọn
+        element.classList.add('active');
+        
+        // Thông báo tin nhắn đã đọc
+        const badge = element.querySelector('.unread-badge');
+        if (badge) {
+            badge.style.opacity = '0';
+            setTimeout(() => badge.remove(), 300);
+        }
+        
+        const container = document.querySelector('.chat-messages');
+        if (!container) return;
+        container.innerHTML = '';
+        
+        try {
+            // Thêm delay nhỏ để đảm bảo IndexedDB đã được cập nhật
+            await new Promise(resolve => setTimeout(resolve, 50));
+            
+            const conversation = await getConversation(friend_id);
+            
+            
+            if (conversation && conversation.chat_list) {
+                const mainContent = document.querySelector('.chat-messages');
+                conversation.chat_list.forEach(message => {
+                    const newDiv = document.createElement('div');
+                    if (message.sender_id == friend_id) {
+                        newDiv.className = 'message received';
+                        newDiv.textContent = message.data;
+                    } else {
+                        newDiv.className = 'message sent';
+                        newDiv.textContent = message.data;
+                    }
+                    mainContent.appendChild(newDiv);
+                });
+                
+                // Scroll xuống cuối
+                mainContent.scrollTop = mainContent.scrollHeight;
+            }
+        } catch (error) {
+            console.error('❌ Error loading conversation:', error);
+        }
+    }
+    window.addEventListener('beforeunload', () => {
+            deleteAllConversations()
+        });
+        
+    // Add new contact
+    function addNewContact(receiver_id,name, avatar, status) {
+        const contactsList = document.getElementById('contactsList');
+        const newContact = document.createElement('div');
+        newContact.className = 'contact-item';
+        newContact.dataset.friend_id = receiver_id;
+        newContact.addEventListener('click', () => {
+            selectContact(newContact);
+        });
+
+        newContact.innerHTML = `
+            <img class="avatar" src="${avatar}"></img>
+            <div class="contact-info">
+                <div class="contact-name">${name.trim()}</div>
+            <input type="hidden" id="receiver_id_${receiver_id}" value = "${receiver_id}">
+            </div>
+            <div class="contact-meta">
+                <div class="contact-time">${status}</div>
+                <div class="unread-badge">1</div>
+            </div>
+        `;
+
+        contactsList.insertBefore(newContact, contactsList.firstChild);
+
+        // thêm hiệu ứng cho contact
+        newContact.style.transform = 'translateX(-100%)';
+        newContact.style.opacity = '0';
+        setTimeout(() => {
+            newContact.style.transform = 'translateX(0)';
+            newContact.style.opacity = '1';
+            newContact.style.transition = 'all 0.3s ease';
+        }, 100);
+    }
+    window.addNewContact = addNewContact;
+    // thêm hiệu ứng cho contact
+    document.querySelectorAll('.contact-item').forEach(item => {
+        item.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateX(5px)';
+        });
+        
+        item.addEventListener('mouseleave', function() {
+            if (!this.classList.contains('active')) {
+                this.style.transform = 'translateX(0)';
+            }
+        });
+    });
+
+
+
+    
+    
+    
+    // gui tin nhan
+    function send_message(){
+        message = document.getElementById("messageInput")
+        if(!message.value || message.value.trim() === "") {
+            return;
+        }
+        send_receiver_id = document.getElementById("send_receiver_id").value
+        if(send_receiver_id){
+        sendMessage({
+                type: "message",
+                typeMessage : "text",
+                to: send_receiver_id,
+                message: message.value?.trim(),
+                timestamp: new Date().toISOString()
+            });
+        }
+        message.value = "";
+    }
+    //gui tin nhan bang phim enter
+    document.getElementById("messageInput").addEventListener("keydown", function(e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            send_message();
+        }
+    });
+
+    document.getElementById('imageInput').addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        const preview = document.getElementById('imagePreview');
+        if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.innerHTML = `<img src="${e.target.result}" style="max-width: 200px; border-radius: 8px;">`;
+            };
+            reader.readAsDataURL(file);
+        } else {
+            preview.innerHTML = '';
+        }
+    });
+
+
+    // ham them tin nhan vao ui
+    function displayMessage(typeMessage,from, message, currentUserId) {
+        console.log(typeMessage)
+        const mainContent = document.querySelector('.chat-messages');
+        if (!mainContent) return;
+        if(typeMessage === "text"){
+            const newDiv = document.createElement('div');
+            if (from === currentUserId) {
+                newDiv.className = 'message sent';
+            } else {
+                newDiv.className = 'message received';
+            }
+            newDiv.textContent = message;
+            mainContent.appendChild(newDiv);
+        }
+       else if (typeMessage === "audio") {
+            const mediaWrapper = document.createElement('div');
+            mediaWrapper.className = from === currentUserId ? 'message sent' : 'message received';
+
+            const videoElem = document.createElement('video');
+            videoElem.controls = true;
+            videoElem.style.width = '250px';
+            videoElem.style.borderRadius = '8px'; // Added for consistent styling
+
+            const sourceElem = document.createElement('source');
+            sourceElem.src = message;
+            sourceElem.type = 'video/webm'; // Changed type to video/webm as per user's request
+
+            videoElem.appendChild(sourceElem);
+            mediaWrapper.appendChild(videoElem);
+            mainContent.appendChild(mediaWrapper);
+
+            // Important: Load the video element explicitly
+            videoElem.load();
+
+            // Add event listeners for debugging (optional but recommended)
+            videoElem.onloadedmetadata = () => console.log('Video metadata loaded for:', message);
+            videoElem.oncanplay = () => console.log('Video can play for:', message);
+            videoElem.onerror = (e) => {
+                console.error('Error loading video:', message, e);
+                if (videoElem.error) {
+                    switch (videoElem.error.code) {
+                        case videoElem.error.MEDIA_ERR_ABORTED:
+                            console.error('Video fetch aborted.');
+                            break;
+                        case videoElem.error.MEDIA_ERR_NETWORK:
+                            console.error('Video network error.');
+                            break;
+                        case videoElem.error.MEDIA_ERR_DECODE:
+                            console.error('Video decode error.');
+                            break;
+                        case videoElem.error.MEDIA_ERR_SRC_NOT_SUPPORTED:
+                            console.error('Video source not supported.');
+                            break;
+                        default:
+                            console.error('An unknown video error occurred.');
+                            break;
+                    }
+                }
+            };
+        }
+
+
+        
+        // Scroll xuống cuối
+        mainContent.scrollTop = mainContent.scrollHeight;
+    }
+
+    
+    //ham truoc khi load trang
+    window.addEventListener('beforeunload', () => {
+        if (connectionCheckInterval) {
+            clearInterval(connectionCheckInterval);
+            
+        }
+        disconnectWebSocket();
+    });
+
+    // Hàm cập nhật ping indicator
+        function updatePingIndicator(lastPingTime) {
+        
+            let indicator = document.getElementById('pingIndicator');
+            if (getConnectionStatus() === "connected") {
+                document.getElementById('pingIndicator').innerHTML = `${lastPingTime}ms`;
+            }
+            
+        }
+
+        setInterval(() =>{
+            if (getConnectionStatus() != "connected") {
+                    document.getElementById('pingIndicator').innerHTML = `đang kết nối`;
+                }
+        },1500)
+        
+    document.addEventListener('visibilitychange', () => {
+        isPageVisible = !document.hidden;
+        if (isPageVisible) {
+            checkAndReconnectIfNeeded();
+        }
+    });
+
+    function add_friends(){}
+    // seach user
+    document.getElementById('seachUsername').addEventListener('input', debounce(async e => {
+        try {
+            if(e.target.value.trim() === '') {
+                document.getElementById('friendList').innerHTML = ''; // Clear the list if input is empty
+                return;
+            }
+            const result = await API('http://127.0.0.1:8000/user/seachUsers/', {
+                username: e.target.value.trim()
+            });
+            
+            if (result) {
+                const friendList = document.getElementById('friendList');
+                friendList.innerHTML = ''; // Clear previous results
+                console.log('Friend list:', result);
+                result.data.forEach(friend => {
+                    console.log('Friend:', friend.avatar, friend.username, friend.user_id);
+                    const friendItem = document.createElement('div');
+                    friendItem.className = `friend-item friend-item-${friend.user_id}`;
+                    friendItem.innerHTML = `
+                        <img src="${friend.avatar}" alt="Avatar" class="avatar" />
+                        <span class="friend-name">${friend.username}</span>
+                        <span class="add-friend" title="Add friend" data-friend-id="${friend.user_id}">+</span>
+                    `;
+                    friendList.appendChild(friendItem);
+                });
+            }
+
+        }
+        catch (error) {
+            console.error('Search failed:', error);
+        }
+    }));
+    // Hàm kiem tra xem nguoi dung co dang nhap hay khong
+    function debounce(fn, delay = 500) {
+        let timeout;
+        return (...args) => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => fn.apply(this, args), delay);
+        };
+    }
+    // Hàm gọi API bang kieu POST
+    async function API(url, data) {
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+            
+        
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
+            }
+            
+            const result = await response.json();
+            return result;
+            
+        } catch (error) {
+            console.error('API call failed:', error);
+            throw error;
+        }
+    }
+    async function APIWithFile(url, formData) {
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                body: formData 
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
+            }
+
+            const result = await response.json();
+            return result;
+
+        } catch (error) {
+            console.error('API with file failed:', error);
+            throw error;
+        }
+    }
+
+    // ham de hien thi dong form them ban be
+    function openFriendForm() {
+        const friendForm = document.getElementById('FriendForm');
+        if (friendForm.style.display === 'none' || friendForm.style.display === '') {
+            friendForm.style.display = 'flex';
+            document.body.classList.add('blur-all');
+            
+        } else {
+            friendForm.style.display = 'none';
+        }
+    }
+    // ham de dong form them ban be
+    function closeFriendForm() {
+        const friendForm = document.getElementById('FriendForm');
+        friendForm.style.display = 'none';
+        document.body.classList.remove('blur-all');
+    }
+    // ham click de gui ket ban
+    document.addEventListener('click',async function(e) {
+        if (e.target.classList.contains('add-friend')) {
+            const user = getCookie('user');
+            const friend_id = e.target.dataset.friendId;
+            const result = await API('http://127.0.0.1:8000/friends/add_friend/',{ user_id: user.user_id,friend_id: friend_id })
+            if (result) {
+                if(result.isSuccess){
+                    console.log('Thêm bạn thành công:', result.message);
+                    sendMessage({
+                        type: "add_friend",
+                        friend_id: friend_id,
+                        "avatar": user.avatar,
+                        "username": user.username,
+                        timestamp: new Date().toISOString()
+                    });
+                }
+                else if(result.isSuccess === false) {
+                    console.log('Thêm bạn thất bại:', result.reason);
+                }
+                else {
+                    console.error('Lỗi không xác định:', result);
+                }
+                
+            
+            } else {
+                // Xử lý lỗi nếu có
+                console.error('Lỗi khi thêm bạn:', result.message);
+            }
+            
+        }
+    });
+    // ham de hien thi danh sach thong bao
+    function notification(){
+        const notification = document.getElementById('notificationList');
+        
+        if (notification.style.display === 'none' || notification.style.display === '') {
+            notification.style.display = 'flex';
+            document.body.classList.add('blur-all');
+            console.log(notification.style.display)
+        } else {
+            notification.style.display = 'none';
+            document.body.classList.remove('blur-all');
+        }
+        
+    }
+    // ham de dong danh sach thong bao
+    function closeNotificationList(){
+        const notificationList = document.getElementById('notificationList');
+        notificationList.style.display = 'none';
+        document.body.classList.remove('blur-all');
+    }
+
+    //ham lay 1 nguoi ban va tin nhan
+    async function get_friends(user_id, friend_id) {
+        const get_friend = await API('http://127.0.0.1:8000/friends/get_friends/',{
+            user_id: user_id,
+            friend_id: friend_id
+        });
+        if( get_friend && get_friend.isSuccess) {
+            addNewContact(get_friend.inf.user_id, get_friend.inf.username, get_friend.inf.avatar, get_friend.inf.status);
+            (async ()=>{
+                for (const message of get_friend.data) {
+                    await addMessageToConversation(get_friend.inf.user_id, message.sender_id, message.receiver_id, message.content);
+                    }
+            })();
+            
+        }
+        else {
+            console.error('Lỗi khi thêm bạn:', get_friend.reason);
+        }
+
+
+    }
+
+    // ham chap nhan ket ban
+    async function accept_friend(friend_id) {
+        const user = getCookie('user');
+        
+        const result = await API('http://127.0.0.1:8000/friends/accept_friend/',{ user_id: user.user_id,friend_id: friend_id })
+            if (result) {
+                if(result.isSuccess){
+                    console.log('Chấp nhận kết bạn thành công:', result.isSuccess);
+                    // Xóa thông báo kết bạn
+                    const friendItem = document.querySelector(`.friend-item-${friend_id}`);
+                    if (friendItem) {
+                        friendItem.remove();
+                    }
+                    get_friends(user.user_id, friend_id);
+                    
+                    
+                    
+                }
+                else if(result.isSuccess === false) {
+                    console.log('Thêm bạn thất bại:', result.reason);
+                }
+                else {
+                    console.error('Lỗi không xác định:', result);
+                }
+                sendMessage({
+                    type: "accept_friend",
+                    
+                    friend_id: friend_id,
+                    timestamp: new Date().toISOString()
+                });
+            
+            } else {
+                // Xử lý lỗi nếu có
+                console.error('Lỗi khi thêm bạn:', result.message);
+            }
+    }
+</script>
+<script>
+let mediaRecorder;
+let audioChunks = [];
+
+const recordBtn = document.getElementById('recordBtn-icon');
+const audioPlayer = document.getElementById('audioPlayer');
+
+// Khi người dùng nhấn giữ chuột
+recordBtn.addEventListener('mousedown', async () => {
+    if (!navigator.mediaDevices) {
+        alert("Trình duyệt không hỗ trợ ghi âm!");
+        return;
+    }
+
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+
+    mediaRecorder.ondataavailable = event => {
+        audioChunks.push(event.data);
+    };
+
+    mediaRecorder.onstop = async() => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        //audioPlayer.src = audioUrl;
+        const formData = new FormData();
+        formData.append('audio', audioBlob);
+        const api_audio = await APIWithFile('http://127.0.0.1:8000/chat/send_audio/',formData)
+        console.log("https://quackquack.io.vn/api/chats/"+ api_audio.data)
+        send_receiver_id = document.getElementById("send_receiver_id").value
+        console.log(send_receiver_id)
+        if(send_receiver_id){
+            const file_audio = "https://quackquack.io.vn/api/chats/" + api_audio.data
+            console.log(send_receiver_id)
+            console.log(file_audio)
+           sendMessage({
+            type: "message",
+            typeMessage : "audio",
+            to: send_receiver_id,
+            message: file_audio,
+            timestamp: new Date().toISOString()
+        }); 
+        }
+        
+        
+
+        audioChunks = [];
+    };
+
+    mediaRecorder.start();
+});
+
+// Khi người dùng thả chuột
+recordBtn.addEventListener('mouseup', () => {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+    }
+});
+</script>
+</body>
+</html>

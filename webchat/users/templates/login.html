@@ -1,0 +1,73 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhotoChat - Đăng Nhập</title>
+    <link rel="stylesheet" href="{% static 'index.css' %}">
+    <script src="{% static 'index.js' %}"></script>
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #fce7f3 0%, #f3e8ff 50%, #dbeafe 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0px !important;
+            position: relative;
+            overflow: hidden;
+            margin: 0 !important;
+
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-decoration"></div>
+    <div class="bg-decoration"></div>
+    <div class="bg-decoration"></div>
+    <div class="wrapper" style="display: flex;">
+        <div class="form-box login">
+            <h2>Login</h2>
+            <form action="{% url 'login' %}" method="post">
+                {% csrf_token %}
+                <div class="input-box">
+                    <input id="input_email" name="email" type="email" required>
+                    <label for="input_email">Email</label>
+                    <span class="icon">
+                        <ion-icon name="person-outline"></ion-icon>
+                    </span>
+                </div>
+                <div class="input-box">
+                    <input id="input_password" type="password" name="password" required>
+                    <label>Password</label>
+                    <span class="icon">
+                        <ion-icon class="locks" id="locks" name="lock-closed-outline"
+                            onclick="hidden_show()"></ion-icon>
+                        <ion-icon class="show" id="show" name="lock-open-outline" onclick="hidden_show()"></ion-icon>
+                    </span>
+                </div>
+                <div class="remember-forgot">
+                    <label><input type="checkbox"> Remember me
+                    </label>
+                    <a href="#">Forgot Password</a>
+                </div>
+                <button id="bnt" type="submit" class="btn" onclick="check()">Đăng nhập</button>
+                <div class="login-register">
+                    <p>Bạn không có tài khoản đăng nhập?
+                        <a id="bnt2" class="register-link" href="{%url 'register'  %}">Đăng kí</a>
+                    </p>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
