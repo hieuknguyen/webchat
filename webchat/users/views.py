@@ -12,7 +12,7 @@ import tempfile
 import os
 from django.http import JsonResponse
 import urllib.parse
-
+from chats.views import chat
 def decode_base64_to_temp_file(base64_string: str) -> tempfile._TemporaryFileWrapper | dict:
     if base64_string.startswith("data:image/"):
         match = re.search(r'base64,(.*)', base64_string)
@@ -59,10 +59,10 @@ def get_home(request):
     user = request.COOKIES.get('user')
     if user:
         try:
-            response = render(request, 'index.html', {'user': user})
-            return response
+            
+            return chat(request)
         except json.JSONDecodeError:
-            response = redirect('/user/')
+            response = redirect('/user/login/')
             return response
     else:
         response = redirect('/user/login/')
