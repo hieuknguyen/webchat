@@ -335,9 +335,7 @@
 
         /* Form cố định dưới cùng */
         .message-form {
-            position: Absolute;
-            bottom: 0;
-            
+           
             width:100%;
         
             
@@ -443,6 +441,11 @@
         .recordBtn-icon:active{
             color: rgba(0, 44, 176, 1)
         }
+        .assdf{
+            position: Absolute;
+            bottom: 0;
+            width:100%;
+        }
     </style>
     <link rel="stylesheet" href="{% static 'background.css' %}">
 </head>
@@ -479,18 +482,17 @@
         
         <div class="main-content">
         <!-- Khu vực tin nhắn -->
-        <div class="chat-messages">
-            
-        </div>
-            <div id="imagePreview"></div>
-            <div id="chatForm" class="message-form">
-                <label for="imageInput" class="icon-button" title="Chọn ảnh"><ion-icon name="folder-outline"></ion-icon></label>
-                <input type="file" id="imageInput" name="image" accept="*/*" class="file-input" multiple>
-                <input type="text" id="messageInput" name="content" class="message-input" placeholder="Nhập tin nhắn…" autocomplete="off">
-                <input type="hidden" id="send_receiver_id">
-                <ion-icon name="mic-outline" id="recordBtn-icon" class="recordBtn-icon" style=""></ion-icon>
-                {% comment %} <audio id="audioPlayer" controls></audio> {% endcomment %}
-                <button type="submit" class="send-button" onclick="send_message()">Gửi</button>
+            <div class="chat-messages"></div>
+            <div class="assdf">
+                <div id="imagePreview">a</div>
+                <div id="chatForm" class="message-form">
+                    <label for="imageInput" class="icon-button" title="Chọn ảnh"><ion-icon name="folder-outline"></ion-icon></label>
+                    <input type="file" id="imageInput" name="image" accept="image/*" class="file-input" multiple>
+                    <input type="text" id="messageInput" name="content" class="message-input" placeholder="Nhập tin nhắn…" autocomplete="off">
+                    <input type="hidden" id="send_receiver_id">
+                    <ion-icon name="mic-outline" id="recordBtn-icon" class="recordBtn-icon" style=""></ion-icon>
+                    <button type="submit" class="send-button" onclick="send_message()">Gửi</button>
+                </div>
             </div>
         </div>
     </div>
@@ -507,7 +509,7 @@
         
             <div id="friendList">
                 <div class="friend-item">
-                    <img src="https://quackquack.io.vn/api/users/avatar/a.png" alt="Avatar" class="avatar" />
+                  
                     <span class="friend-name">Nguyễn Trung Hiếu</span>
                     <span class="add-friend" title="Add friend">+</span>
                 </div>
@@ -841,7 +843,7 @@ font-size: 20px;
                     
                     try {
                         // Lưu vào IndexedDB trước
-                        await addMessageToConversation(friendId, senderId, receiverId, message);
+                        await addMessageToConversation(friendId, senderId, receiverId, message,typeMessage);
                      
                         
                         // Chỉ hiển thị UI nếu đang xem cuộc trò chuyện này
@@ -904,7 +906,7 @@ font-size: 20px;
         for (const message of messages) {
                 const friend_id = message.friend_id;
                 for (const chat of message.chat_list) {
-                    await addMessageToConversation(friend_id, chat.sender_id, chat.receiver_id, chat.content);
+                    await addMessageToConversation(friend_id, chat.sender_id, chat.receiver_id, chat.content, chat.type);
                 }
             }
     })();
@@ -985,8 +987,8 @@ font-size: 20px;
         });
     }
     // Thêm tin nhắn mới vào cuộc trò chuyện
-    async function addMessageToConversation(friendId, senderId, receiverId, messageData) {
-        
+    async function addMessageToConversation(friendId, senderId, receiverId, messageData, typeMessage) {
+
         
         try {
             const db = await openChatDatabase();
@@ -1009,6 +1011,7 @@ font-size: 20px;
                         sender_id: senderId,
                         receiver_id: receiverId,
                         data: messageData,
+                        typeMessage: typeMessage,
                         timestamp: new Date().toISOString()
                     };
                     
@@ -1204,15 +1207,36 @@ font-size: 20px;
             if (conversation && conversation.chat_list) {
                 const mainContent = document.querySelector('.chat-messages');
                 conversation.chat_list.forEach(message => {
-                    const newDiv = document.createElement('div');
-                    if (message.sender_id == friend_id) {
-                        newDiv.className = 'message received';
+                    if(message.typeMessage === "text"){
+                        const newDiv = document.createElement('div');
+                        if (message.sender_id == friend_id) {
+                            newDiv.className = 'message received';
+                        } else {
+                            newDiv.className = 'message sent';  
+                        }
                         newDiv.textContent = message.data;
-                    } else {
-                        newDiv.className = 'message sent';
-                        newDiv.textContent = message.data;
+                        mainContent.appendChild(newDiv);
                     }
-                    mainContent.appendChild(newDiv);
+                    else if (message.typeMessage === "audio") {
+                        const newDiv = document.createElement('div');
+                        if (message.sender_id == friend_id) {
+                            newDiv.className = 'message received';
+                        } else {
+                            newDiv.className = 'message sent';  
+                        }
+                        newDiv.innerHTML = `<audio controls="" src="${message.data}" type="audio/webm"></audio>`;
+                        mainContent.appendChild(newDiv);
+                    }
+                    else if (message.typeMessage === "img") {
+                        const newDiv = document.createElement('div');
+                        newDiv.className = message.sender_id == friend_id ? 'message received' : 'message sent';
+                        newDiv.innerHTML = `
+                            <img src="${message.data}" 
+                                style="max-width: 200px; border-radius: 8px; object-fit: cover;">
+                        `;
+                        mainContent.appendChild(newDiv);
+                    }
+
                 });
                 
                 // Scroll xuống cuối
@@ -1277,14 +1301,49 @@ font-size: 20px;
 
     
     
-    
+    function toBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+        reader.readAsDataURL(file);
+    });
+}
     // gui tin nhan
-    function send_message(){
+    async function send_message(){
+        send_receiver_id = document.getElementById("send_receiver_id").value
         message = document.getElementById("messageInput")
         if(!message.value || message.value.trim() === "") {
+            const input = document.getElementById('imageInput');
+            const files = input.files;
+
+            if (files.length) {
+                const formData = new FormData();
+                // Gửi file đầu tiên với key là "img"
+                formData.append("img", files[0]); 
+
+                try {
+                    // Gửi đi như bình thường
+                    const result = await APIWithFile("http://127.0.0.1:8000/chat/uploads_img/", formData);
+                    console.log("Server trả về:", result);
+                    if (result.isSuccess){
+                        sendMessage({
+                            type: "message",
+                            typeMessage : "img",
+                            to: send_receiver_id,
+                            message:result.data ,
+                            timestamp: new Date().toISOString()
+                        });
+                    }
+    
+                } catch (err) {
+                    alert("Lỗi gửi ảnh!");
+                }
+            }
+            clearImage();
             return;
         }
-        send_receiver_id = document.getElementById("send_receiver_id").value
+        
         if(send_receiver_id){
         sendMessage({
                 type: "message",
@@ -1294,6 +1353,7 @@ font-size: 20px;
                 timestamp: new Date().toISOString()
             });
         }
+        
         message.value = "";
     }
     //gui tin nhan bang phim enter
@@ -1304,19 +1364,7 @@ font-size: 20px;
         }
     });
 
-    document.getElementById('imageInput').addEventListener('change', function(event) {
-        const file = event.target.files[0];
-        const preview = document.getElementById('imagePreview');
-        if (file && file.type.startsWith('image/')) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                preview.innerHTML = `<img src="${e.target.result}" style="max-width: 200px; border-radius: 8px;">`;
-            };
-            reader.readAsDataURL(file);
-        } else {
-            preview.innerHTML = '';
-        }
-    });
+    
 
 
     // ham them tin nhan vao ui
@@ -1335,52 +1383,26 @@ font-size: 20px;
             mainContent.appendChild(newDiv);
         }
        else if (typeMessage === "audio") {
-            const mediaWrapper = document.createElement('div');
-            mediaWrapper.className = from === currentUserId ? 'message sent' : 'message received';
-
-            const videoElem = document.createElement('video');
-            videoElem.controls = true;
-            videoElem.style.width = '250px';
-            videoElem.style.borderRadius = '8px'; // Added for consistent styling
-
-            const sourceElem = document.createElement('source');
-            sourceElem.src = message;
-            sourceElem.type = 'video/webm'; // Changed type to video/webm as per user's request
-
-            videoElem.appendChild(sourceElem);
-            mediaWrapper.appendChild(videoElem);
-            mainContent.appendChild(mediaWrapper);
-
-            // Important: Load the video element explicitly
-            videoElem.load();
-
-            // Add event listeners for debugging (optional but recommended)
-            videoElem.onloadedmetadata = () => console.log('Video metadata loaded for:', message);
-            videoElem.oncanplay = () => console.log('Video can play for:', message);
-            videoElem.onerror = (e) => {
-                console.error('Error loading video:', message, e);
-                if (videoElem.error) {
-                    switch (videoElem.error.code) {
-                        case videoElem.error.MEDIA_ERR_ABORTED:
-                            console.error('Video fetch aborted.');
-                            break;
-                        case videoElem.error.MEDIA_ERR_NETWORK:
-                            console.error('Video network error.');
-                            break;
-                        case videoElem.error.MEDIA_ERR_DECODE:
-                            console.error('Video decode error.');
-                            break;
-                        case videoElem.error.MEDIA_ERR_SRC_NOT_SUPPORTED:
-                            console.error('Video source not supported.');
-                            break;
-                        default:
-                            console.error('An unknown video error occurred.');
-                            break;
-                    }
-                }
-            };
+            const newDiv = document.createElement('div');
+            if (from === currentUserId) {
+                newDiv.className = 'message sent';
+            } else {
+                newDiv.className = 'message received';
+            }
+            newDiv.innerHTML = `<audio controls="" src="${message}" type="audio/webm"></audio>`;
+            mainContent.appendChild(newDiv);
         }
-
+        else if (typeMessage === "img") {
+            const newDiv = document.createElement('div');
+            if (from === currentUserId) {
+                newDiv.className = 'message sent';
+            } else {
+                newDiv.className = 'message received';
+            }
+            newDiv.innerHTML = `<img style="max-width: 200px; border-radius: 8px; object-fit: cover;" src="${message}">`;
+            mainContent.appendChild(newDiv);
+        }
+        
 
         
         // Scroll xuống cuối
@@ -1588,7 +1610,7 @@ font-size: 20px;
             addNewContact(get_friend.inf.user_id, get_friend.inf.username, get_friend.inf.avatar, get_friend.inf.status);
             (async ()=>{
                 for (const message of get_friend.data) {
-                    await addMessageToConversation(get_friend.inf.user_id, message.sender_id, message.receiver_id, message.content);
+                    await addMessageToConversation(get_friend.inf.user_id, message.sender_id, message.receiver_id, message.content, message.typeMessage);
                     }
             })();
             
@@ -1643,9 +1665,17 @@ let audioChunks = [];
 
 const recordBtn = document.getElementById('recordBtn-icon');
 const audioPlayer = document.getElementById('audioPlayer');
-
+const fileInput = document.getElementById('imageInput');
+function hasFiles() {
+  return fileInput.files && fileInput.files.length > 0;
+}
 // Khi người dùng nhấn giữ chuột
+
 recordBtn.addEventListener('mousedown', async () => {
+    if(hasFiles()){
+        return
+    }
+    else{
     if (!navigator.mediaDevices) {
         alert("Trình duyệt không hỗ trợ ghi âm!");
         return;
@@ -1678,7 +1708,7 @@ recordBtn.addEventListener('mousedown', async () => {
             to: send_receiver_id,
             message: file_audio,
             timestamp: new Date().toISOString()
-        }); 
+        }); }
         }
         
         
@@ -1695,6 +1725,60 @@ recordBtn.addEventListener('mouseup', () => {
         mediaRecorder.stop();
     }
 });
+</script>
+<script>
+const imageInput   = document.getElementById('imageInput');
+const imagePreview = document.getElementById('imagePreview');
+const messageInput = document.getElementById('messageInput');   
+const recordBtnIcon = document.getElementById('recordBtn-icon');   
+imageInput.addEventListener('change', function (event) {
+  const file = event.target.files[0];
+
+  // Nếu chọn đúng file ảnh
+  if (file && file.type.startsWith('image/')) {
+    const reader = new FileReader();
+
+    reader.onload = e => {
+      // Tạo HTML xem trước + nút xoá
+      imagePreview.innerHTML = `
+        <img src="${e.target.result}"
+             style="max-width:200px;border-radius:8px;">
+        <button id="removeImgBtn"
+                style="
+                   position: Absolute;
+                   top:0px;
+                   right0px;
+                   background:#ff5555;border:none;color:#fff;
+                   border-radius:50%;width:24px;height:24px;
+                   cursor:pointer;font-weight:bold;line-height:20px;
+                ">
+          ✕
+        </button>
+      `;
+
+        // Khóa ô nhập tin nhắn khi có ảnh
+        messageInput.disabled = true;
+        recordBtnIcon.disabled = true;
+      // Gắn sự kiện xoá
+      document.getElementById('removeImgBtn').onclick = () => clearImage();
+    };
+
+    reader.readAsDataURL(file);
+  } else {
+    clearImage();
+  }
+});
+
+function clearImage() {
+const recordBtnIcon = document.getElementById('recordBtn-icon');   
+  // Xoá ảnh xem trước
+  imagePreview.innerHTML = '';
+  // Xoá file đã chọn khỏi input
+  imageInput.value = '';
+  // Mở lại ô nhập text
+  messageInput.disabled = false;
+  recordBtnIcon.disabled = false;
+}
 </script>
 </body>
 </html>
