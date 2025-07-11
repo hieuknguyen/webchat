@@ -446,6 +446,10 @@
             bottom: 0;
             width:100%;
         }
+        
+
+        
+        
     </style>
     <link rel="stylesheet" href="{% static 'background.css' %}">
 </head>
@@ -1174,7 +1178,11 @@ font-size: 20px;
     }
     // Contact selection
     async function selectContact(element) {
-        
+        const iconButton = document.querySelector(".icon-button")
+        const imageInput   = document.getElementById('imageInput');
+        imageInput.disabled = false;
+        iconButton.style.opacity = '1';
+        iconButton.style.backgroundColor = "initial";
         document.querySelectorAll('.contact-item')
             .forEach(e => e.classList.toggle('active', e === element));
         
@@ -1749,43 +1757,78 @@ recordBtn.addEventListener('mouseup', () => {
 const imageInput   = document.getElementById('imageInput');
 const imagePreview = document.getElementById('imagePreview');
 const messageInput = document.getElementById('messageInput');   
-const recordBtnIcon = document.getElementById('recordBtn-icon');   
-imageInput.addEventListener('change', function (event) {
-  const file = event.target.files[0];
+const recordBtnIcon = document.getElementById('recordBtn-icon');
 
-  // Nếu chọn đúng file ảnh
-  if (file && file.type.startsWith('image/')) {
+const iconButton = document.querySelector(".icon-button")
+iconButton.addEventListener('mouseover', function (event) {
+    const activeContact = document.querySelector('.contact-item.active');
+    console.log(activeContact)
+    if (activeContact) {
+        imageInput.disabled = false;
+        iconButton.style.opacity = '1';
+        iconButton.style.backgroundColor = "#e0e0e0";
+    }
+    else{
+        imageInput.disabled = true;
+        iconButton.style.opacity = '0.5';
+        iconButton.style.backgroundColor = "initial";
+
+        
+    }
+});
+iconButton.addEventListener('mouseleave', function (event) {
+    iconButton.style.backgroundColor = "initial"; 
+    }
+);
+
+/*imageInput.addEventListener('click', function (event) {
+    const activeContact = document.querySelector('.contact-item.active');
+    console.log(activeContact)
+    if (activeContact) {
+       imageInput.disabled = false;
+    }
+    else{
+        imageInput.disabled = true;
+    }
+});*/
+
+
+imageInput.addEventListener('change', function (event) {
+    const file = event.target.files[0];
+
+    // Nếu chọn đúng file ảnh
+    if (file && file.type.startsWith('image/')) {
     const reader = new FileReader();
 
     reader.onload = e => {
-      // Tạo HTML xem trước + nút xoá
-      imagePreview.innerHTML = `
+        // Tạo HTML xem trước + nút xoá
+        imagePreview.innerHTML = `
         <img src="${e.target.result}"
-             style="max-width:200px;border-radius:8px;">
+                style="max-width:200px;border-radius:8px;">
         <button id="removeImgBtn"
                 style="
-                   position: Absolute;
-                   top:0px;
-                   right0px;
-                   background:#ff5555;border:none;color:#fff;
-                   border-radius:50%;width:24px;height:24px;
-                   cursor:pointer;font-weight:bold;line-height:20px;
+                    position: Absolute;
+                    top:0px;
+                    right0px;
+                    background:#ff5555;border:none;color:#fff;
+                    border-radius:50%;width:24px;height:24px;
+                    cursor:pointer;font-weight:bold;line-height:20px;
                 ">
-          ✕
+            ✕
         </button>
-      `;
+        `;
 
         // Khóa ô nhập tin nhắn khi có ảnh
         messageInput.disabled = true;
         recordBtnIcon.disabled = true;
-      // Gắn sự kiện xoá
-      document.getElementById('removeImgBtn').onclick = () => clearImage();
+        // Gắn sự kiện xoá
+        document.getElementById('removeImgBtn').onclick = () => clearImage();
     };
 
     reader.readAsDataURL(file);
-  } else {
+    } else {
     clearImage();
-  }
+    }
 });
 
 function clearImage() {
@@ -1798,6 +1841,17 @@ const recordBtnIcon = document.getElementById('recordBtn-icon');
   messageInput.disabled = false;
   recordBtnIcon.disabled = false;
 }
+
+const activeContact = document.querySelector('.contact-item.active');
+if (!activeContact) {
+
+    imageInput.disabled = true;
+    iconButton.style.opacity = '0.5';
+    iconButton.style.backgroundColor = "initial";
+}
+
+
+
 </script>
 </body>
 </html>
