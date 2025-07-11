@@ -848,9 +848,11 @@ font-size: 20px;
                         
                         // Chỉ hiển thị UI nếu đang xem cuộc trò chuyện này
                         const activeContact = document.querySelector('.contact-item.active');
+                        
                         if (activeContact && activeContact.dataset.friend_id === friendId) {
 
                             displayMessage(typeMessage,from, message, user.user_id);
+                            
                         }
                         
                     } catch (saveError) {
@@ -1172,6 +1174,7 @@ font-size: 20px;
     }
     // Contact selection
     async function selectContact(element) {
+        
         document.querySelectorAll('.contact-item')
             .forEach(e => e.classList.toggle('active', e === element));
         
@@ -1382,15 +1385,24 @@ font-size: 20px;
             newDiv.textContent = message;
             mainContent.appendChild(newDiv);
         }
-       else if (typeMessage === "audio") {
+        else if (typeMessage === "audio") {
             const newDiv = document.createElement('div');
-            if (from === currentUserId) {
-                newDiv.className = 'message sent';
-            } else {
-                newDiv.className = 'message received';
-            }
-            newDiv.innerHTML = `<audio controls="" src="${message}" type="audio/webm"></audio>`;
             mainContent.appendChild(newDiv);
+            
+            setTimeout(() => {
+                if (from === currentUserId) {
+                    newDiv.className = 'message sent';
+                } else {
+                    newDiv.className = 'message received';
+                }
+                newDiv.innerHTML = `<audio controls="" src="${message}" type="audio/webm"></audio>`;
+                
+                // Gán onloadeddata sau khi tạo audio element
+                const audio = newDiv.querySelector('audio');
+                audio.onloadeddata = () => {
+                    mainContent.scrollTop = mainContent.scrollHeight;
+                };
+            }, 400);
         }
         else if (typeMessage === "img") {
             const newDiv = document.createElement('div');
@@ -1399,8 +1411,15 @@ font-size: 20px;
             } else {
                 newDiv.className = 'message received';
             }
+            
             newDiv.innerHTML = `<img style="max-width: 200px; border-radius: 8px; object-fit: cover;" src="${message}">`;
             mainContent.appendChild(newDiv);
+            
+            // Lấy img từ div và gán onload
+            const img = newDiv.querySelector('img');
+            img.onload = () => {
+                mainContent.scrollTop = mainContent.scrollHeight;
+            };
         }
         
 
